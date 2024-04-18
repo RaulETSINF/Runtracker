@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.mastermovilesua.runtruckerraul"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.mastermovilesua.runtruckerraul"
