@@ -1,4 +1,4 @@
-package com.mastermovilesua.runtruckerraul
+package com.mastermovilesua.runtrackerraul
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle

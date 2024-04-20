@@ -1,4 +1,4 @@
-package com.mastermovilesua.runtruckerraul
+package com.mastermovilesua.runtrackerraul
 
 import org.junit.Test
 

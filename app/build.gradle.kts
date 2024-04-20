@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.mastermovilesua.runtruckerraul"
+    namespace = "com.mastermovilesua.runtrackerraul"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.mastermovilesua.runtruckerraul"
+        applicationId = "com.mastermovilesua.runtrackerraul"
         minSdk = 26
         targetSdk = 33
         versionCode = 1
