@@ -67,7 +67,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback {
 
                         if (lastLocation != null) {
                             totalDistance += distanceBetween(lastLocation!!, it)
-                            binding.textViewDistance.text = "$totalDistance m"
+                            binding.textViewDistance.text = "Distancia: \n ${String.format("%.2f", totalDistance/1000)} km"
                         }
 
                     }else{
@@ -186,6 +186,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback {
         cadence = 0
         rhythm = 0
         totalTrainingTime = 0
+        stopLocationUpdates()
     }
 
     @SuppressLint("MissingPermission")
