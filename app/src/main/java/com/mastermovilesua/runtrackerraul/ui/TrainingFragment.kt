@@ -1,7 +1,12 @@
 package com.mastermovilesua.runtrackerraul.ui
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.Color
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Bundle
 import android.os.Looper
 import android.os.SystemClock
@@ -24,10 +29,15 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.mastermovilesua.runtrackerraul.R
+import com.mastermovilesua.runtrackerraul.RunTrackerApp
 import com.mastermovilesua.runtrackerraul.databinding.FragmentTrainingBinding
+import com.mastermovilesua.runtrackerraul.models.Entrenamiento
 import com.mastermovilesua.runtrackerraul.utils.distanceBetween
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-class TrainingFragment : Fragment(), OnMapReadyCallback {
+class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
 
     private var isRunning = false
     private var isPaused = true
@@ -47,6 +57,9 @@ class TrainingFragment : Fragment(), OnMapReadyCallback {
     private var cadence = 0
     private var rhythm = 0
     private var totalTrainingTime = 0
+
+    private lateinit var sensorManager: SensorManager
+    private var stepSensor: Sensor? = null
 
     private val locationCallback = object : com.google.android.gms.location.LocationCallback() {
         override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
@@ -96,6 +109,10 @@ class TrainingFragment : Fragment(), OnMapReadyCallback {
         mapFragment?.getMapAsync(this)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+
+        sensorManager = requireActivity().getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+
 
         return binding.root
     }
@@ -157,7 +174,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun resetTraining(){
-/*        CoroutineScope(Dispatchers.IO).launch {
+        CoroutineScope(Dispatchers.IO).launch {
             val entrenamiento = Entrenamiento(
                 tiempo = totalTrainingTime.toLong(),
                 distancia = totalDistance,
@@ -166,7 +183,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback {
                 fecha = System.currentTimeMillis()
             )
             RunTrackerApp.database.entrenamientoDao().insert(entrenamiento)
-        }*/
+        }
         resetUserInterface()
     }
 
@@ -222,6 +239,31 @@ class TrainingFragment : Fragment(), OnMapReadyCallback {
         isRunning = false
         isPaused = true
         this.googleMap.clear()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_NORMAL)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        sensorManager.unregisterListener(this)
+    }
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        event?.let {
+            if (it.sensor == stepSensor) {
+                // Manejar los cambios en el contador de pasos aquí
+                val steps = it.values[0].toInt()
+                // Actualizar la UI con el número de pasos
+                Log.d("Pasos", steps.toString())
+            }
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+
     }
 
 }
