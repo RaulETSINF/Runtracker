@@ -20,9 +20,16 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.Polyline
+import com.google.android.gms.maps.model.PolylineOptions
 import com.mastermovilesua.runtrackerraul.R
 import com.mastermovilesua.runtrackerraul.databinding.FragmentTrainingBinding
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 class TrainingFragment : Fragment(), OnMapReadyCallback {
 
@@ -32,9 +39,14 @@ class TrainingFragment : Fragment(), OnMapReadyCallback {
 
     private lateinit var googleMap: GoogleMap
 
-
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var currentLocation: LatLng? = null
+
+    private val routePoints = mutableListOf<LatLng>()
+    private var routePolyline: Polyline? = null
+
+    private var totalDistance = 0.0
+    private var lastLocation: LatLng? = null
 
     private val locationCallback = object : com.google.android.gms.location.LocationCallback() {
         override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
@@ -42,21 +54,38 @@ class TrainingFragment : Fragment(), OnMapReadyCallback {
             Log.d("My Location", "Location Updated")
             currentLocation = LatLng(locationResult.lastLocation!!.latitude, locationResult.lastLocation!!.longitude)
             currentLocation?.let {
-                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(it, 15f))
-                //googleMap.addMarker(MarkerOptions().position(it).title("Mi ubicación"))
+                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(it, 17f))
+                if (isRunning){
+                    routePoints.add(it)
+                    updateRoute()
+                    if (lastLocation != null) {
+                        totalDistance += distanceBetween(lastLocation!!, it)
+                        binding.textViewDistance.text = "$totalDistance m"
+                    }
+                    lastLocation = it
+                }
             }
         }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Log.d("onCreate", "onCreate")
+
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
+
+        Log.d("onCreateView", "onCreateView")
         binding = FragmentTrainingBinding.inflate(inflater, container, false)
 
         binding.chronometer.base = SystemClock.elapsedRealtime()
 
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
+
         mapFragment?.getMapAsync(this)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
@@ -67,6 +96,8 @@ class TrainingFragment : Fragment(), OnMapReadyCallback {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        Log.d("onViewCreated", "onViewCreated")
+
         binding.btnStartStop.setOnClickListener {
             if (isRunning) {
                 stopTraining()
@@ -74,6 +105,11 @@ class TrainingFragment : Fragment(), OnMapReadyCallback {
                 startTraining()
             }
         }
+    }
+
+    private fun updateRoute() {
+        routePolyline?.remove()
+        routePolyline = googleMap.addPolyline(PolylineOptions().addAll(routePoints))
     }
 
     private fun startTraining() {
@@ -91,14 +127,17 @@ class TrainingFragment : Fragment(), OnMapReadyCallback {
         stopLocationUpdates()
     }
 
+    @SuppressLint("MissingPermission")
     override fun onMapReady(googleMap: GoogleMap) {
         this.googleMap = googleMap
+        this.googleMap.isMyLocationEnabled = true
+        startLocationUpdates()
     }
 
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
 
-        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000).apply {
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 100).apply {
             setGranularity(Granularity.GRANULARITY_PERMISSION_LEVEL)
             setWaitForAccurateLocation(true)
         }.build()
@@ -113,6 +152,25 @@ class TrainingFragment : Fragment(), OnMapReadyCallback {
 
     private fun stopLocationUpdates() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
+    }
+
+    private fun distanceBetween(start: LatLng, end: LatLng): Double {
+        val radius = 6371000.0 // radio de la tierra en metros
+        val dLat = Math.toRadians(end.latitude - start.latitude)
+        val dLon = Math.toRadians(end.longitude - start.longitude)
+        val a = sin(dLat / 2) * sin(dLat / 2) +
+                cos(Math.toRadians(start.latitude)) * cos(Math.toRadians(end.latitude)) *
+                sin(dLon / 2) * sin(dLon / 2)
+        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        return radius * c
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        Log.d("onDestroyView", "onDestroyView")
+        stopLocationUpdates()
+        isRunning = false
+        this.googleMap.clear()
     }
 
 }
