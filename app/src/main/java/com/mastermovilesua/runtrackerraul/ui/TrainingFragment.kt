@@ -1,6 +1,7 @@
 package com.mastermovilesua.runtrackerraul.ui
 
 import android.annotation.SuppressLint
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Looper
 import android.os.SystemClock
@@ -20,33 +21,32 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.mastermovilesua.runtrackerraul.R
 import com.mastermovilesua.runtrackerraul.databinding.FragmentTrainingBinding
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
+import com.mastermovilesua.runtrackerraul.utils.distanceBetween
 
 class TrainingFragment : Fragment(), OnMapReadyCallback {
 
     private var isRunning = false
+    private var isPaused = true
 
     private lateinit var binding: FragmentTrainingBinding
-
     private lateinit var googleMap: GoogleMap
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var currentLocation: LatLng? = null
+    private var lastLocation: LatLng? = null
 
     private val routePoints = mutableListOf<LatLng>()
+    private val routePausedPoints = mutableListOf<LatLng>()
     private var routePolyline: Polyline? = null
 
     private var totalDistance = 0.0
-    private var lastLocation: LatLng? = null
+    private var cadence = 0
+    private var rhythm = 0
+    private var totalTrainingTime = 0
 
     private val locationCallback = object : com.google.android.gms.location.LocationCallback() {
         override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
@@ -54,32 +54,39 @@ class TrainingFragment : Fragment(), OnMapReadyCallback {
             Log.d("My Location", "Location Updated")
             currentLocation = LatLng(locationResult.lastLocation!!.latitude, locationResult.lastLocation!!.longitude)
             currentLocation?.let {
+
                 googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(it, 17f))
+
                 if (isRunning){
-                    routePoints.add(it)
-                    updateRoute()
-                    if (lastLocation != null) {
-                        totalDistance += distanceBetween(lastLocation!!, it)
-                        binding.textViewDistance.text = "$totalDistance m"
+
+                    if (!isPaused){
+
+                        routePausedPoints.clear()
+                        routePoints.add(it)
+                        updateRoute()
+
+                        if (lastLocation != null) {
+                            totalDistance += distanceBetween(lastLocation!!, it)
+                            binding.textViewDistance.text = "$totalDistance m"
+                        }
+
+                    }else{
+                        routePoints.clear()
+                        routePausedPoints.add(it)
+                        updatePausedRoute()
                     }
+
+                    println("Last Location Update")
                     lastLocation = it
+
                 }
             }
         }
     }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        Log.d("onCreate", "onCreate")
-
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
-        Log.d("onCreateView", "onCreateView")
         binding = FragmentTrainingBinding.inflate(inflater, container, false)
 
         binding.chronometer.base = SystemClock.elapsedRealtime()
@@ -96,24 +103,39 @@ class TrainingFragment : Fragment(), OnMapReadyCallback {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        Log.d("onViewCreated", "onViewCreated")
-
         binding.btnStartStop.setOnClickListener {
+            Log.d("Click", "Click Corto")
             if (isRunning) {
-                stopTraining()
+                if (isPaused){
+                    resumeTraining()
+                }else{
+                    stopTraining()
+                }
             } else {
                 startTraining()
             }
         }
+
+        binding.btnStartStop.setOnLongClickListener {
+            Log.d("LongClick", "Click Largo")
+            if (isRunning){
+                resetTraining()
+            }
+            return@setOnLongClickListener true
+        }
     }
 
     private fun updateRoute() {
-        routePolyline?.remove()
-        routePolyline = googleMap.addPolyline(PolylineOptions().addAll(routePoints))
+        googleMap.addPolyline(PolylineOptions().addAll(routePoints).color(Color.RED))
+    }
+
+    private fun updatePausedRoute() {
+        googleMap.addPolyline(PolylineOptions().addAll(routePausedPoints).color(Color.TRANSPARENT))
     }
 
     private fun startTraining() {
         isRunning = true
+        isPaused = false
         binding.chronometer.base = SystemClock.elapsedRealtime()
         binding.chronometer.start()
         binding.btnStartStop.text = "Pausar Entrenamiento"
@@ -121,10 +143,49 @@ class TrainingFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun stopTraining() {
-        isRunning = false
+        isPaused = true
         binding.chronometer.stop()
+        binding.btnStartStop.text = "Reanudar Entrenamiento"
+    }
+
+    private fun resumeTraining(){
+        isPaused = false
+        isRunning = true
+        binding.chronometer.start()
+        binding.btnStartStop.text = "Pausar Entrenamiento"
+        startLocationUpdates()
+    }
+
+    private fun resetTraining(){
+/*        CoroutineScope(Dispatchers.IO).launch {
+            val entrenamiento = Entrenamiento(
+                tiempo = totalTrainingTime.toLong(),
+                distancia = totalDistance,
+                ritmo = rhythm.toDouble(),
+                cadencia = cadence,
+                fecha = System.currentTimeMillis()
+            )
+            RunTrackerApp.database.entrenamientoDao().insert(entrenamiento)
+        }*/
+        resetUserInterface()
+    }
+
+    private fun resetUserInterface() {
+        isRunning = false
+        isPaused = true
+        binding.textViewDistance.text = "0.00 km"
+        binding.textViewCadence.text = "0 spm"
+        binding.textViewRhythm.text = "0:00 min/km"
         binding.btnStartStop.text = "Iniciar Entrenamiento"
-        stopLocationUpdates()
+        googleMap.clear()
+        routePoints.clear()
+        binding.chronometer.base = SystemClock.elapsedRealtime()
+        binding.chronometer.stop()
+        routePolyline = null
+        totalDistance = 0.0
+        cadence = 0
+        rhythm = 0
+        totalTrainingTime = 0
     }
 
     @SuppressLint("MissingPermission")
@@ -147,22 +208,10 @@ class TrainingFragment : Fragment(), OnMapReadyCallback {
         settingsClient.checkLocationSettings(locationSettingsRequest)
 
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
-
     }
 
     private fun stopLocationUpdates() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
-    }
-
-    private fun distanceBetween(start: LatLng, end: LatLng): Double {
-        val radius = 6371000.0 // radio de la tierra en metros
-        val dLat = Math.toRadians(end.latitude - start.latitude)
-        val dLon = Math.toRadians(end.longitude - start.longitude)
-        val a = sin(dLat / 2) * sin(dLat / 2) +
-                cos(Math.toRadians(start.latitude)) * cos(Math.toRadians(end.latitude)) *
-                sin(dLon / 2) * sin(dLon / 2)
-        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
-        return radius * c
     }
 
     override fun onDestroyView() {
@@ -170,6 +219,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback {
         Log.d("onDestroyView", "onDestroyView")
         stopLocationUpdates()
         isRunning = false
+        isPaused = true
         this.googleMap.clear()
     }
 
