@@ -9,4 +9,25 @@
         <item>reply</item>
         <item>reply_all</item>
     </string-array>
+
+    <string-array name="notification_type_entries">
+        <item>Por tiempo</item>
+        <item>Por distancia</item>
+    </string-array>
+    <string-array name="notification_type_values">
+        <item>time</item>
+        <item>distance</item>
+    </string-array>
+
+    <string-array name="gps_accuracy_entries">
+        <item>Óptima</item>
+        <item>Media</item>
+        <item>Baja</item>
+    </string-array>
+    <string-array name="gps_accuracy_values">
+        <item>high</item>
+        <item>medium</item>
+        <item>low</item>
+    </string-array>
+
 </resources>

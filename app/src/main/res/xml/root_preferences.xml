@@ -1,35 +1,60 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory app:title="@string/messages_header">
-
-        <EditTextPreference
-            app:key="signature"
-            app:title="@string/signature_title"
-            app:useSimpleSummaryProvider="true" />
+    <PreferenceCategory
+        app:title="Notificaciones acústicas de intervalos">
 
         <ListPreference
-            app:defaultValue="reply"
-            app:entries="@array/reply_entries"
-            app:entryValues="@array/reply_values"
-            app:key="reply"
-            app:title="@string/reply_title"
+            app:key="notification_type"
+            app:title="Tipo de notificación"
+            app:entries="@array/notification_type_entries"
+            app:entryValues="@array/notification_type_values"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            app:key="distance_notification"
+            app:title="Distancia de notificación (metros)"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            app:key="time_notification"
+            app:title="Tiempo de notificación (minutos)"
             app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/sync_header">
+    <PreferenceCategory
+        app:title="Autopause">
 
         <SwitchPreferenceCompat
-            app:key="sync"
-            app:title="@string/sync_title" />
+            app:key="autopause"
+            app:title="Activar autopause" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="Precisión GPS">
+
+        <ListPreference
+            app:key="gps_accuracy"
+            app:title="Precisión GPS"
+            app:entries="@array/gps_accuracy_entries"
+            app:entryValues="@array/gps_accuracy_values"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="Indicación de cadencia">
 
         <SwitchPreferenceCompat
-            app:dependency="sync"
-            app:key="attachment"
-            app:summaryOff="@string/attachment_summary_off"
-            app:summaryOn="@string/attachment_summary_on"
-            app:title="@string/attachment_title" />
+            app:key="cadence_notification"
+            app:title="Activar indicación de cadencia" />
+
+        <EditTextPreference
+            app:key="cadence_threshold"
+            app:title="Umbral de cadencia mínima (pasos por minuto)"
+            app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>
 

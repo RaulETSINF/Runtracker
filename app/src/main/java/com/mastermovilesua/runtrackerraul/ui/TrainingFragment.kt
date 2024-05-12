@@ -2,6 +2,7 @@ package com.mastermovilesua.runtrackerraul.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -17,6 +18,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import androidx.preference.PreferenceManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Granularity
 import com.google.android.gms.location.LocationRequest
@@ -64,7 +66,16 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private var stepSensor: Sensor? = null
 
-    lateinit var mapFragment: SupportMapFragment
+    private lateinit var mapFragment: SupportMapFragment
+    private lateinit var sharedPreferences: SharedPreferences
+
+
+
+    //SHARED PREFERENCE
+    private var isAutoPauseEnable = false
+    
+
+
 
     private val locationCallback = object : com.google.android.gms.location.LocationCallback() {
         override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
@@ -108,6 +119,8 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
         binding = FragmentTrainingBinding.inflate(inflater, container, false)
 
         binding.chronometer.base = SystemClock.elapsedRealtime()
+
+        sharedPreferences = requireActivity().getPreferences(Context.MODE_PRIVATE)
 
         mapFragment = (childFragmentManager.findFragmentById(R.id.fragment_map) as SupportMapFragment?)!!
         mapFragment.getMapAsync(this)
@@ -228,7 +241,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
 
-        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 100).apply {
+        val locationRequest = LocationRequest.Builder(getPriorityFromSharedPreference(), 100).apply {
             setGranularity(Granularity.GRANULARITY_PERMISSION_LEVEL)
             setWaitForAccurateLocation(true)
         }.build()
@@ -238,6 +251,15 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
         settingsClient.checkLocationSettings(locationSettingsRequest)
 
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+    }
+
+    private fun getPriorityFromSharedPreference(): Int {
+        when(PreferenceManager.getDefaultSharedPreferences(requireContext()).getString("gps_accuracy", "high")){
+            "high" -> return  Priority.PRIORITY_HIGH_ACCURACY
+            "medium" -> return Priority.PRIORITY_BALANCED_POWER_ACCURACY
+            "low" -> return Priority.PRIORITY_LOW_POWER
+        }
+        return  Priority.PRIORITY_HIGH_ACCURACY
     }
 
     private fun stopLocationUpdates() {
