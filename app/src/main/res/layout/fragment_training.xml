@@ -7,15 +7,12 @@
     android:orientation="vertical"
     tools:context=".ui.TrainingFragment">
 
-
     <fragment
-        android:id="@+id/map"
+        android:id="@+id/fragment_map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         map:cameraZoom="17"/>
-    
-    
     
     <androidx.cardview.widget.CardView
         android:layout_marginTop="50dp"
@@ -147,11 +144,7 @@
                         android:textSize="16sp"
                         android:textStyle="bold"/>
 
-
                 </LinearLayout>
-
-
-
 
             </LinearLayout>
 
@@ -161,6 +154,8 @@
 
 
     <Button
+        android:backgroundTint="#CD01D553"
+        android:textColor="@color/md_theme_background"
         android:id="@+id/btnStartStop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

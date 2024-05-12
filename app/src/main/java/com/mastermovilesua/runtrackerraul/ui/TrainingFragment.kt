@@ -15,6 +15,8 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageView
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Granularity
 import com.google.android.gms.location.LocationRequest
@@ -62,6 +64,8 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private var stepSensor: Sensor? = null
 
+    lateinit var mapFragment: SupportMapFragment
+
     private val locationCallback = object : com.google.android.gms.location.LocationCallback() {
         override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
             super.onLocationResult(locationResult)
@@ -105,9 +109,8 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
 
         binding.chronometer.base = SystemClock.elapsedRealtime()
 
-        val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
-
-        mapFragment?.getMapAsync(this)
+        mapFragment = (childFragmentManager.findFragmentById(R.id.fragment_map) as SupportMapFragment?)!!
+        mapFragment.getMapAsync(this)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
@@ -211,7 +214,14 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
     override fun onMapReady(googleMap: GoogleMap) {
         this.googleMap = googleMap
         this.googleMap.isMyLocationEnabled = true
-        this.googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this.requireContext(), R.raw.map_style_night));
+        this.googleMap.setMapStyle(
+            MapStyleOptions.loadRawResourceStyle(
+                this.requireContext(),
+                R.raw.map_style_night
+            )
+        )
+        mapFragment.view?.findViewWithTag<ImageView>("GoogleMapMyLocationButton")?.visibility = View.GONE;
+        mapFragment.view?.setBackgroundColor(resources.getColor(R.color.md_theme_inverseOnSurface))
         startLocationUpdates()
     }
 

@@ -7,6 +7,9 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.mastermovilesua.runtrackerraul.R
 import com.mastermovilesua.runtrackerraul.models.Entrenamiento
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class TrainingAdapter(var trainingList: List<Entrenamiento>) :
     RecyclerView.Adapter<TrainingAdapter.TrainingViewHolder>() {
@@ -19,9 +22,18 @@ class TrainingAdapter(var trainingList: List<Entrenamiento>) :
 
     override fun onBindViewHolder(holder: TrainingViewHolder, position: Int) {
         val currentTraining = trainingList[position]
-        holder.textViewTrainingDate.text = "${currentTraining.fecha}"
+
+        // Convertir milisegundos a una fecha normal
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
+        val date = Date(currentTraining.fecha)
+        val fechaNormal = dateFormat.format(date)
+
+        // Convertir la distancia de metros a kilómetros
+        val distanciaEnKilometros = String.format("%.2f", currentTraining.distancia / 1000.0)
+
+        holder.textViewTrainingDate.text = fechaNormal
         holder.textViewTrainingTime.text = "${currentTraining.tiempo} ms"
-        holder.textViewTrainingDistance.text = "${currentTraining.distancia} m"
+        holder.textViewTrainingDistance.text = "$distanciaEnKilometros km"
         holder.textViewTrainingRhythm.text = "${currentTraining.ritmo} min/km"
         holder.textViewTrainingCadence.text = "${currentTraining.cadencia} spm"
     }

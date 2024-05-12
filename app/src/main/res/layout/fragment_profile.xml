@@ -3,53 +3,170 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:padding="16dp"
     tools:context=".ui.ProfileFragment">
 
-<ImageView
-    android:id="@+id/userImage"
-    android:layout_width="100dp"
-    android:layout_height="100dp"
-    android:src="@drawable/profile"
-    android:layout_gravity="center_horizontal"
-    android:layout_marginBottom="16dp"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
-<TextView
-    android:id="@+id/userName"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="Nombre del Usuario"
-    android:textSize="24sp"
-    android:textStyle="bold"
-    android:layout_gravity="center_horizontal"
-    android:layout_marginBottom="8dp"/>
+        <ImageView
+            android:layout_marginEnd="10dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/profile"
+            app:tint="#00F15E" />
 
-<TextView
-    android:id="@+id/userAge"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="Edad: XX años"
-    android:textSize="18sp"
-    android:layout_gravity="center_horizontal"
-    android:layout_marginBottom="4dp"/>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-<TextView
-    android:id="@+id/userWeight"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="Peso: XX kg"
-    android:textSize="18sp"
-    android:layout_gravity="center_horizontal"
-    android:layout_marginBottom="4dp"/>
+            <TextView
+                android:textColor="#85FFF9F9"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="10sp"
+                android:text="Nombre de Usuario"/>
 
-<TextView
-    android:id="@+id/userHeight"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="Altura: XX cm"
-    android:textSize="18sp"
-    android:layout_gravity="center_horizontal"
-    android:layout_marginBottom="16dp"/>
+            <TextView
+                android:id="@+id/textViewTrainingTime"
+                android:textColor="#B0FFF9F9"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:text="Raul Piqueras Melero"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <com.google.android.material.divider.MaterialDivider
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="10dp"/>
+
+    <TextView
+        android:textColor="#B0FFF9F9"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:text="Datos personales"/>
+
+    <LinearLayout
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="5dp">
+        <androidx.cardview.widget.CardView
+            android:layout_marginHorizontal="5dp"
+            app:cardCornerRadius="13dp"
+            android:layout_width="match_parent"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/md_theme_inverseOnSurface">
+
+            <LinearLayout
+                android:padding="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:textColor="#85FFF9F9"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="10sp"
+                    android:text="Edad"/>
+
+                <TextView
+                    android:id="@+id/textViewTrainingDistance"
+                    android:textColor="#B0FFF9F9"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:text="24 años"/>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_marginHorizontal="5dp"
+            app:cardCornerRadius="13dp"
+            android:layout_width="match_parent"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/md_theme_inverseOnSurface">
+
+            <LinearLayout
+                android:padding="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:textColor="#85FFF9F9"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="10sp"
+                    android:text="Peso"/>
+
+                <TextView
+                    android:textColor="#B0FFF9F9"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:text="64 kg"/>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_marginHorizontal="5dp"
+            app:cardCornerRadius="13dp"
+            android:layout_width="match_parent"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/md_theme_inverseOnSurface">
+
+            <LinearLayout
+                android:padding="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:textColor="#85FFF9F9"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="10sp"
+                    android:text="Altura"/>
+
+                <TextView
+                    android:textColor="#B0FFF9F9"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:text="165 cm"/>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+
+
 
 </LinearLayout>
