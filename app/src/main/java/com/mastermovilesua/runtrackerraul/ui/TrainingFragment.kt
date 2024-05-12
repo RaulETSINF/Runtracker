@@ -19,6 +19,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.preference.PreferenceManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Granularity
@@ -190,10 +191,23 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
         binding.btnStartStop.setOnLongClickListener {
             Log.d("LongClick", "Click Largo")
             if (isRunning){
+                showConfirmationDialog()
+            }
+            true
+        }
+    }
+
+    private fun showConfirmationDialog() {
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("Resetear Entrenamiento")
+        builder.setMessage("¿Estás seguro de que deseas resetear el entrenamiento?")
+        builder.setPositiveButton("Sí") { _, _ ->
+            if (isRunning) {
                 resetTraining()
             }
-            return@setOnLongClickListener true
         }
+        builder.setNegativeButton("No", null)
+        builder.show()
     }
 
     private fun updateRoute() {
