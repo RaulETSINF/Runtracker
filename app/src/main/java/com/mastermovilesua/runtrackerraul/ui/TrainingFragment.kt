@@ -18,6 +18,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.preference.PreferenceManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Granularity
@@ -71,9 +72,17 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
 
 
 
+
     //SHARED PREFERENCE
+
+    //AUTOPAUSE
     private var isAutoPauseEnable = false
-    
+    private val AUTOPAUSE_THRESHOLD_METERS = 10
+    private val LAST_LOCATIONS_TO_CHECK = 5
+    private val lastLocations = mutableListOf<LatLng>()
+
+
+
 
 
 
@@ -96,7 +105,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
 
                         if (lastLocation != null) {
                             totalDistance += distanceBetween(lastLocation!!, it)
-                            binding.textViewDistance.text = "Distancia: \n ${String.format("%.2f", totalDistance/1000)} km"
+                            binding.textViewDistance.text = "${String.format("%.2f", totalDistance/1000)} km"
                         }
 
                     }else{
@@ -107,11 +116,39 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
 
                     println("Last Location Update")
                     lastLocation = it
-
+                    if (PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("autopause", false)){
+                        if (!isPaused){
+                            checkAutopause(it)
+                        }
+                    }
                 }
             }
         }
     }
+
+    private fun checkAutopause(newLocation: LatLng) {
+        lastLocations.add(newLocation)
+        if (lastLocations.size > LAST_LOCATIONS_TO_CHECK) {
+            lastLocations.removeAt(0)
+        }
+        if (lastLocations.size == LAST_LOCATIONS_TO_CHECK) {
+            if (isUserStopped(lastLocations)) {
+                stopTraining()
+                lastLocations.clear()
+                showToast("Autopause activado: Actividad detenida")
+            }
+        }
+    }
+
+    private fun isUserStopped(locations: List<LatLng>): Boolean {
+        val distance = distanceBetween(locations.first(), locations.last())
+        return distance < AUTOPAUSE_THRESHOLD_METERS
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
