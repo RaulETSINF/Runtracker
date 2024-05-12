@@ -19,11 +19,11 @@ class TrainingAdapter(var trainingList: List<Entrenamiento>) :
 
     override fun onBindViewHolder(holder: TrainingViewHolder, position: Int) {
         val currentTraining = trainingList[position]
-        holder.textViewTrainingDate.text = "Fecha: ${currentTraining.fecha}"
-        holder.textViewTrainingTime.text = "Tiempo: ${currentTraining.tiempo} ms"
-        holder.textViewTrainingDistance.text = "Distancia: ${currentTraining.distancia} m"
-        holder.textViewTrainingRhythm.text = "Ritmo: ${currentTraining.ritmo} min/km"
-        holder.textViewTrainingCadence.text = "Cadencia: ${currentTraining.cadencia} spm"
+        holder.textViewTrainingDate.text = "${currentTraining.fecha}"
+        holder.textViewTrainingTime.text = "${currentTraining.tiempo} ms"
+        holder.textViewTrainingDistance.text = "${currentTraining.distancia} m"
+        holder.textViewTrainingRhythm.text = "${currentTraining.ritmo} min/km"
+        holder.textViewTrainingCadence.text = "${currentTraining.cadencia} spm"
     }
 
     override fun getItemCount() = trainingList.size
