@@ -42,6 +42,7 @@ class MainActivity : AppCompatActivity() {
             } else {
                 showPermissionSettingsDialog()
             }
+            
         }
 
         requestPermissionLauncher.launch(
