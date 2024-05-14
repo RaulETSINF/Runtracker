@@ -32,7 +32,7 @@ class TrainingAdapter(var trainingList: List<Entrenamiento>) :
         val distanciaEnKilometros = String.format("%.2f", currentTraining.distancia / 1000.0)
 
         holder.textViewTrainingDate.text = fechaNormal
-        holder.textViewTrainingTime.text = "${currentTraining.tiempo} ms"
+        holder.textViewTrainingTime.text = "${currentTraining.tiempo}"
         holder.textViewTrainingDistance.text = "$distanciaEnKilometros km"
         holder.textViewTrainingRhythm.text = "${currentTraining.ritmo} min/km"
         holder.textViewTrainingCadence.text = "${currentTraining.cadencia} spm"

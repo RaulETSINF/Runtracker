@@ -16,6 +16,6 @@ class RunTrackerApp : Application() {
         database = Room.databaseBuilder(
             applicationContext,
             EntrenamientoDatabase::class.java, "entrenamiento-db"
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
 }
