@@ -2,9 +2,22 @@
 
 ![](assets/20240512_182804_app.png)
 
-## Descripción
+# Raúl Piqueras Melero
 
+# Descripción
 RunTracker es una aplicación para Android que permite a los usuarios realizar un seguimiento de sus entrenamientos de carrera. La aplicación consta de varias funcionalidades principales:
+
+# Dificultades encontradas y cómo se resolvieron
+
+Durante el desarrollo de este proyecto, encontré algunas dificultades que tuve que superar para completar la aplicación. Una de las principales dificultades fue la implementación del sensor de pasos, ya que no funcionaba correctamente en el simulador. Para solucionarlo, tuve que probar la aplicación en un dispositivo físico y realizar pruebas sin tener la consola disponible en tiempo real.
+
+Además, tuve que buscar documentación sobre cómo implementar vistas de mapas en Android y cómo trabajar con notificaciones.
+
+## Opinión Personal
+
+En mi opinión, una de las debilidades de este proyecto es que intenta abarcar demasiado contenido para el objetivo que pretende alcanzar. Muchas de las funcionalidades descritas en el enunciado, como la ventana de configuración con ajustes para notificaciones y la ventana de perfil, podrían haberse omitido para centrarse en lo esencial. Considero que el el hecho de incluir tantas funcionalidades puede resultar abrumador.
+
+Sin embargo, a pesar de las dificultades encontradas, considero que el proyecto fue muy entretenido de realizar y extremadamente satisfactorio una vez completado. Es un proyecto original y he aprendido mucho trabajando en él. Aunque haya sido un reto, me siento muy satisfecho con el resultado final.
 
 ## Características
 
@@ -126,7 +139,7 @@ Justo con cada actualización de ubicación vamos dibujando la ruta en el mapa. 
 
 ![](assets/Route.png)
 
-### ###Detener, reanudar y resetear el entrenamiento
+### Detener, reanudar y resetear el entrenamiento
 
 ```kotlin
 binding.btnStartStop.setOnClickListener {
