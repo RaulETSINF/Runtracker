@@ -53,6 +53,9 @@ import kotlinx.coroutines.launch
 
 class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
 
+    private var lastStepTime = 0L
+    private var totalSteps = 0
+
     private var isRunning = false
     private var isPaused = true
 
@@ -296,6 +299,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
         binding.chronometer.start()
         binding.btnStartStop.text = "Pausar Entrenamiento"
         startLocationUpdates()
+        sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_NORMAL)
     }
 
     private fun stopTraining() {
@@ -365,6 +369,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
         rhythm = 0
         totalTrainingTime = 0
         stopLocationUpdates()
+        sensorManager.unregisterListener(this)
     }
 
     @SuppressLint("MissingPermission")
@@ -427,23 +432,24 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
         this.googleMap.clear()
     }
 
-    override fun onResume() {
-        super.onResume()
-        sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_NORMAL)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        sensorManager.unregisterListener(this)
-    }
-
     override fun onSensorChanged(event: SensorEvent?) {
         event?.let {
             if (it.sensor == stepSensor) {
-                // Manejar los cambios en el contador de pasos aquí
-                val steps = it.values[0].toInt()
-                // Actualizar la UI con el número de pasos
-                Log.d("Pasos", steps.toString())
+                if (isRunning){
+                    if (!isPaused){
+                        val currentTime = System.currentTimeMillis()
+                        val steps = it.values[0].toInt() - totalSteps
+                        val elapsedTime = currentTime - lastStepTime
+                        if (elapsedTime > 0) {
+                            cadence = ((steps * 60000) / elapsedTime).toInt()
+                            binding.textViewCadence.text = "$cadence spm"
+                            lastStepTime = currentTime
+                            totalSteps += steps
+                        }
+                        Log.d("Pasos", totalSteps.toString())
+                    }
+                }
+
             }
         }
     }
