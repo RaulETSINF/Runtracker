@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -12,10 +13,12 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.os.SystemClock
+import android.provider.Settings
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -251,7 +254,6 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
         sensorManager = requireActivity().getSystemService(Context.SENSOR_SERVICE) as SensorManager
         stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
 
-
         return binding.root
     }
 
@@ -390,17 +392,69 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
 
     @SuppressLint("MissingPermission")
     override fun onMapReady(googleMap: GoogleMap) {
+        if (ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // Solicitar permisos al usuario
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACTIVITY_RECOGNITION),
+                LOCATION_PERMISSION_REQUEST_CODE
+            )
+            return
+        } else {
+            // Los permisos ya están otorgados, proceder con la configuración del mapa
+            configureMap(googleMap)
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun configureMap(googleMap: GoogleMap) {
         this.googleMap = googleMap
         this.googleMap.isMyLocationEnabled = true
         this.googleMap.setMapStyle(
             MapStyleOptions.loadRawResourceStyle(
-                this.requireContext(),
+                requireContext(),
                 R.raw.map_style_night
             )
         )
         mapFragment.view?.findViewWithTag<ImageView>("GoogleMapMyLocationButton")?.visibility = View.GONE;
         mapFragment.view?.setBackgroundColor(resources.getColor(R.color.md_theme_inverseOnSurface))
         startLocationUpdates()
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permiso otorgado, configurar el mapa
+                onMapReady(googleMap)
+            } else {
+                // Permiso denegado, mostrar diálogo para ir a la configuración de la aplicación
+                showPermissionSettingsDialog()
+            }
+        }
+    }
+
+    private fun showPermissionSettingsDialog() {
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("Permisos requeridos")
+            .setMessage("La aplicación requiere permisos de ubicación para funcionar correctamente. Por favor, habilite los permisos en la configuración de la aplicación.")
+            .setPositiveButton("Configuración") { dialog, _ ->
+                // Abrir la configuración de la aplicación para que el usuario pueda otorgar los permisos manualmente
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                val uri = Uri.fromParts("package", requireActivity().packageName, null)
+                intent.data = uri
+                startActivity(intent)
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancelar") { dialog, _ ->
+                dialog.dismiss()
+            }
+        val dialog = builder.create()
+        dialog.show()
     }
 
     @SuppressLint("MissingPermission")
@@ -445,7 +499,6 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
         stopLocationUpdates()
         isRunning = false
         isPaused = true
-        this.googleMap.clear()
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
@@ -479,6 +532,10 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
 
+    }
+
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 100
     }
 
 }
