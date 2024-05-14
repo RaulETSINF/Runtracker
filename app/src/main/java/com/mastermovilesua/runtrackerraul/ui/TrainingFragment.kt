@@ -71,9 +71,6 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
     private lateinit var mapFragment: SupportMapFragment
     private lateinit var sharedPreferences: SharedPreferences
 
-
-
-
     //SHARED PREFERENCE
 
     //AUTOPAUSE
@@ -81,11 +78,6 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
     private val AUTOPAUSE_THRESHOLD_METERS = 10
     private val LAST_LOCATIONS_TO_CHECK = 5
     private val lastLocations = mutableListOf<LatLng>()
-
-
-
-
-
 
     private val locationCallback = object : com.google.android.gms.location.LocationCallback() {
         override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {

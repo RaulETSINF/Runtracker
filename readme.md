@@ -1,25 +1,132 @@
 # RunTracker
 
-
 ![](assets/20240512_182804_app.png)
 
 ## Descripción
+
 RunTracker es una aplicación para Android que permite a los usuarios realizar un seguimiento de sus entrenamientos de carrera. La aplicación consta de varias funcionalidades principales:
 
 ## Características
-- **Entreno:**
 
-  - Mostrar datos en tiempo real: tiempo, distancia, ritmo y cadencia.
-  - Visualización de la ruta en un mapa.
+- **Entreno:**
   - Detección de actividad y registro de la ubicación del usuario.
   - Configuración de notificaciones acústicas para intervalos de tiempo o distancia.
   - Avisos acústicos de umbrales de cadencia.
 
-### Funcionalidad de detener, reanudar y resetear el entrenamiento
+### Registro de la actividad y carga del mapa de Google Maps
 
-La aplicación RunTracker proporciona funcionalidades para iniciar, detener, reanudar y resetear los entrenamientos. Estas funcionalidades están implementadas de la siguiente manera:
+Se implementa el callback `OnMapReadyCallback` en el fragmento `TrainingFragment` y se utiliza un `LocationCallback` para recibir actualizaciones de ubicación.
 
-#### Iniciar, detener y reanudar el entrenamiento:
+#### Implementación del callback `OnMapReadyCallback`:
+
+```kotlin
+class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
+    ...
+}
+```
+
+### Carga del mapa y configuración
+
+En el método `onViewCreated`, simplemente cargamos el mapa y asignamos su configuración.
+
+```kotlin
+override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+  
+    // Carga del mapa
+    mapFragment = (childFragmentManager.findFragmentById(R.id.fragment_map) as SupportMapFragment?)!!
+    mapFragment.getMapAsync(this)
+}
+```
+
+```kotlin
+// Método llamado cuando el mapa está listo
+@SuppressLint("MissingPermission")
+override fun onMapReady(googleMap: GoogleMap) {
+    this.googleMap = googleMap
+  
+    // Habilitar la ubicación del usuario en el mapa
+    this.googleMap.isMyLocationEnabled = true
+  
+    // Establecer el estilo del mapa
+    this.googleMap.setMapStyle(
+        MapStyleOptions.loadRawResourceStyle(
+            this.requireContext(),
+            R.raw.map_style_night
+        )
+    )
+  
+    // Ocultar el botón de ubicación del usuario
+    mapFragment.view?.findViewWithTag<ImageView>("GoogleMapMyLocationButton")?.visibility = View.GONE;
+  
+    // Establecer el color de fondo del mapa
+    mapFragment.view?.setBackgroundColor(resources.getColor(R.color.md_theme_inverseOnSurface))
+  
+    // Iniciar actualizaciones de ubicación
+    startLocationUpdates()
+}
+```
+
+### Funcionalidad
+
+En este apartado es donde se reciben las actualizaciones de ubicación del dispositivo móvil. Aquí también se actualizan todas las etiquetas de distancia, cadencia, se comprueba la configuración de la aplicación, se lanzan las notificaciones acústicas, entre otras funciones.
+
+```kotlin
+private val locationCallback = object : com.google.android.gms.location.LocationCallback() {
+    override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
+        super.onLocationResult(locationResult)
+        Log.d("My Location", "Location Updated")
+        currentLocation = LatLng(locationResult.lastLocation!!.latitude, locationResult.lastLocation!!.longitude)
+        currentLocation?.let {
+            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(it, 17f))
+
+            if (isRunning){
+                if (!isPaused){
+                    routePausedPoints.clear()
+                    routePoints.add(it)
+                    updateRoute()
+
+                    if (lastLocation != null) {
+                        totalDistance += distanceBetween(lastLocation!!, it)
+                        binding.textViewDistance.text = "${String.format("%.2f", totalDistance/1000)} km"
+                    }
+
+                } else {
+                    routePoints.clear()
+                    routePausedPoints.add(it)
+                    updatePausedRoute()
+                }
+
+                lastLocation = it
+                if (PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("autopause", false)){
+                    if (!isPaused){
+                        checkAutopause(it)
+                    }
+                }
+            }
+        }
+    }
+}
+
+```
+
+### Visualización de la ruta en un mapa.
+
+Justo con cada actualización de ubicación vamos dibujando la ruta en el mapa. (Siempre que se este realizando una actividad)
+
+```kotlin
+    private fun updateRoute() {
+        googleMap.addPolyline(PolylineOptions().addAll(routePoints).color(Color.RED))
+    }
+
+    private fun updatePausedRoute() {
+        googleMap.addPolyline(PolylineOptions().addAll(routePausedPoints).color(Color.TRANSPARENT))
+    }
+```
+
+![](assets/Route.png)
+
+### ###Detener, reanudar y resetear el entrenamiento
 
 ```kotlin
 binding.btnStartStop.setOnClickListener {
@@ -78,41 +185,41 @@ private fun resetUserInterface() {
 
 ### Autopause
 
-  El modo autopause es una característica que permite pausar automáticamente el entrenamiento cuando el usuario no está en movimiento. La aplicación verifica periódicamente la ubicación del usuario y, si no detecta movimiento durante un período de tiempo específico, pausa el entrenamiento automáticamente.
+El modo autopause es una característica que permite pausar automáticamente el entrenamiento cuando el usuario no está en movimiento. La aplicación verifica periódicamente la ubicación del usuario y, si no detecta movimiento durante un período de tiempo específico, pausa el entrenamiento automáticamente.
 
-  #### Implementación
+#### Implementación
 
-  Para implementar el autopause, seguimos los siguientes pasos:
+Para implementar el autopause, seguimos los siguientes pasos:
 
-  1. Verificar si el autopause está activado en la configuración de la aplicación.
-    
-  ```kotlin
-  if (PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("autopause", false)) {
-      if (!isPaused) {
-          checkAutopause(it)
-      }
-  }
-  ```
+1. Verificar si el autopause está activado en la configuración de la aplicación.
 
-  2. Comprobar la ubicación del usuario periódicamente y verificar si el usuario está en movimiento.
+```kotlin
+if (PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("autopause", false)) {
+    if (!isPaused) {
+        checkAutopause(it)
+    }
+}
+```
 
-  ```kotlin
-  private fun checkAutopause(newLocation: LatLng) {
-  lastLocations.add(newLocation)
-  if (lastLocations.size > LAST_LOCATIONS_TO_CHECK) {
-      lastLocations.removeAt(0)
-  }
-  if (lastLocations.size == LAST_LOCATIONS_TO_CHECK) {
-      if (isUserStopped(lastLocations)) {
-          stopTraining()
-          lastLocations.clear()
-          showToast("Autopause activado: Actividad detenida")
-      }
+2. Comprobar la ubicación del usuario periódicamente y verificar si el usuario está en movimiento.
+
+```kotlin
+private fun checkAutopause(newLocation: LatLng) {
+lastLocations.add(newLocation)
+if (lastLocations.size > LAST_LOCATIONS_TO_CHECK) {
+    lastLocations.removeAt(0)
+}
+if (lastLocations.size == LAST_LOCATIONS_TO_CHECK) {
+    if (isUserStopped(lastLocations)) {
+        stopTraining()
+        lastLocations.clear()
+        showToast("Autopause activado: Actividad detenida")
     }
   }
-  ```
-  3. Si el usuario no ha cambiado su ubicación durante un período de tiempo específico, se detiene el entrenamiento y se muestra un mensaje indicando que el autopause está activado.
+}
+```
 
+3. Si el usuario no ha cambiado su ubicación durante un período de tiempo específico, se detiene el entrenamiento y se muestra un mensaje indicando que el autopause está activado.
 
 ## Historial
 
@@ -148,6 +255,7 @@ abstract class EntrenamientoDatabase : RoomDatabase() {
 }
 
 ```
+
 ### Visualización de los entrenamientos en el RecyclerView
 
 Para mostrar los entrenamientos almacenados en la base de datos, utilizamos un RecyclerView en la ventana de historial. A continuación se muestra un resumen de la implementación:
@@ -234,12 +342,14 @@ Las opciones de configuración de RunTracker se pueden acceder a través de la p
 Para modificar estas opciones, acceda a la pestaña "Opciones" en la aplicación RunTracker.
 
 ## Frameworks Utilizados
-- Room Database 
-- Android Sensor Manager 
+
+- Room Database
+- Android Sensor Manager
 - Google Maps
 - Shared Preferences
 
 ## Instalación
+
 1. Clona este repositorio: `git clone https://github.com/mastermoviles/pr-ctica-1-runtracker-raul-piqueras.git`
 2. Abre el proyecto en Android Studio.
 3. Ejecuta la aplicación en un dispositivo Android o un emulador.
