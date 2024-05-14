@@ -71,6 +71,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
     private var totalDistanceNotification = 0.0
 
     private var pauseOffset: Long = 0
+    var lastNotificationTime = 0
 
     private var cadence = 0
     private var rhythm = 0
@@ -119,16 +120,19 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
                                     }
                                 }
                                 1 -> {
-                                    val sharedTime = PreferenceManager.getDefaultSharedPreferences(requireContext()).getInt("time_notification", 2)
+                                    val sharedTime = PreferenceManager.getDefaultSharedPreferences(requireContext())
+
+                                    val myTime = PreferenceManager.getDefaultSharedPreferences(requireContext()).getInt("time_notification", 2)
 
                                     if (getCurrentTimeMinutes().toInt() != 0){
-                                        if ((getCurrentTimeMinutes() % sharedTime).toInt() == 0 && getCurrentTimeMinutes() > 0) {
+                                        if (getCurrentTimeMinutes() > (lastNotificationTime + (myTime - 1))) {
                                             val title = "Título de la notificación"
                                             val body = "El cronómetro ha alcanzado ${getCurrentTimeMinutes()} minutos"
                                             requireContext().showNotification(title, body)
+
+                                            lastNotificationTime = getCurrentTimeMinutes().toInt()
                                         }
                                     }
-
                                 }
                             }
 
@@ -319,7 +323,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
     private fun resetTraining(){
         CoroutineScope(Dispatchers.IO).launch {
             val entrenamiento = Entrenamiento(
-                tiempo = totalTrainingTime.toLong(),
+                tiempo = getCurrentTime(),
                 distancia = totalDistance,
                 ritmo = rhythm.toDouble(),
                 cadencia = cadence,
@@ -333,6 +337,14 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
     private fun getCurrentTimeMinutes(): Long {
         val elapsedTime = SystemClock.elapsedRealtime() - binding.chronometer.base
         return (elapsedTime / 60000)
+    }
+
+    private fun getCurrentTime(): String {
+        val elapsedTime = SystemClock.elapsedRealtime() - binding.chronometer.base
+        val hours = (elapsedTime / 3600000)
+        val minutes = (elapsedTime - hours * 3600000) / 60000
+        val seconds = (elapsedTime - hours * 3600000 - minutes * 60000) / 1000
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds)
     }
 
     private fun resetUserInterface() {
@@ -351,6 +363,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
         totalDistanceNotification = 0.0
         cadence = 0
         pauseOffset = 0
+        lastNotificationTime = 0
         rhythm = 0
         totalTrainingTime = 0
         stopLocationUpdates()
