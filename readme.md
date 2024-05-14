@@ -11,10 +11,70 @@ RunTracker es una aplicación para Android que permite a los usuarios realizar u
 
   - Mostrar datos en tiempo real: tiempo, distancia, ritmo y cadencia.
   - Visualización de la ruta en un mapa.
-  - Funcionalidad de iniciar, pausar, reanudar y detener el entrenamiento.
   - Detección de actividad y registro de la ubicación del usuario.
   - Configuración de notificaciones acústicas para intervalos de tiempo o distancia.
   - Avisos acústicos de umbrales de cadencia.
+
+### Funcionalidad de detener, reanudar y resetear el entrenamiento
+
+La aplicación RunTracker proporciona funcionalidades para iniciar, detener, reanudar y resetear los entrenamientos. Estas funcionalidades están implementadas de la siguiente manera:
+
+#### Iniciar, detener y reanudar el entrenamiento:
+
+```kotlin
+binding.btnStartStop.setOnClickListener {
+    if (isRunning) {
+        if (isPaused) {
+            resumeTraining()
+        } else {
+            stopTraining()
+        }
+    } else {
+        startTraining()
+    }
+}
+```
+
+- Iniciar entrenamiento: Al hacer clic en el botón de inicio, se inicia el entrenamiento.
+- Detener entrenamiento: Si el entrenamiento está en marcha, al hacer clic en el botón de parada, se detiene el entrenamiento. Si el entrenamiento está pausado, al hacer clic en el botón de     parada, se reanuda el entrenamiento.
+- Reanudar entrenamiento: Si el entrenamiento está pausado, al hacer clic en el botón de inicio, se reanuda el entrenamiento.
+
+```kotlin
+private fun resetTraining() {
+    CoroutineScope(Dispatchers.IO).launch {
+        val entrenamiento = Entrenamiento(
+            tiempo = totalTrainingTime.toLong(),
+            distancia = totalDistance,
+            ritmo = rhythm.toDouble(),
+            cadencia = cadence,
+            fecha = System.currentTimeMillis()
+        )
+        RunTrackerApp.database.entrenamientoDao().insert(entrenamiento)
+    }
+    resetUserInterface()
+}
+
+private fun resetUserInterface() {
+    isRunning = false
+    isPaused = true
+    binding.textViewDistance.text = "0.00 km"
+    binding.textViewCadence.text = "0 spm"
+    binding.textViewRhythm.text = "0:00 min/km"
+    binding.btnStartStop.text = "Iniciar Entrenamiento"
+    googleMap.clear()
+    routePoints.clear()
+    binding.chronometer.base = SystemClock.elapsedRealtime()
+    binding.chronometer.stop()
+    routePolyline = null
+    totalDistance = 0.0
+    cadence = 0
+    rhythm = 0
+    totalTrainingTime = 0
+    stopLocationUpdates()
+}
+```
+
+- Resetear entrenamiento: Al hacer clic prolongado en el botón de inicio, se muestra un cuadro de diálogo de confirmación para resetear el entrenamiento. Si se confirma, se detiene el entrenamiento y se guarda en la base de datos. Además, se restablece la interfaz de usuario y se borran todos los datos del entrenamiento actual.
 
 ### Autopause
 
