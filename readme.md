@@ -21,11 +21,6 @@ Sin embargo, a pesar de las dificultades encontradas, considero que el proyecto 
 
 ## Características
 
-- **Entreno:**
-  - Detección de actividad y registro de la ubicación del usuario.
-  - Configuración de notificaciones acústicas para intervalos de tiempo o distancia.
-  - Avisos acústicos de umbrales de cadencia.
-
 ### Registro de la actividad y carga del mapa de Google Maps
 
 Se implementa el callback `OnMapReadyCallback` en el fragmento `TrainingFragment` y se utiliza un `LocationCallback` para recibir actualizaciones de ubicación.
@@ -80,46 +75,74 @@ override fun onMapReady(googleMap: GoogleMap) {
 }
 ```
 
-### Funcionalidad
+### Funcionalidad Core de la Aplicación
 
 En este apartado es donde se reciben las actualizaciones de ubicación del dispositivo móvil. Aquí también se actualizan todas las etiquetas de distancia, cadencia, se comprueba la configuración de la aplicación, se lanzan las notificaciones acústicas, entre otras funciones.
 
 ```kotlin
-private val locationCallback = object : com.google.android.gms.location.LocationCallback() {
-    override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
-        super.onLocationResult(locationResult)
-        Log.d("My Location", "Location Updated")
-        currentLocation = LatLng(locationResult.lastLocation!!.latitude, locationResult.lastLocation!!.longitude)
-        currentLocation?.let {
-            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(it, 17f))
+ private val locationCallback = object : com.google.android.gms.location.LocationCallback() {
+        override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
+            super.onLocationResult(locationResult)
+            Log.d("My Location", "Location Updated")
+            currentLocation = LatLng(locationResult.lastLocation!!.latitude, locationResult.lastLocation!!.longitude)
+            currentLocation?.let {
 
-            if (isRunning){
-                if (!isPaused){
-                    routePausedPoints.clear()
-                    routePoints.add(it)
-                    updateRoute()
+                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(it, 17f))
 
-                    if (lastLocation != null) {
-                        totalDistance += distanceBetween(lastLocation!!, it)
-                        binding.textViewDistance.text = "${String.format("%.2f", totalDistance/1000)} km"
+                if (isRunning){
+
+                    if (!isPaused){
+
+                        routePausedPoints.clear()
+                        routePoints.add(it)
+                        updateRoute()
+
+                        if (lastLocation != null) {
+                            totalDistance += distanceBetween(lastLocation!!, it)
+                            totalDistanceNotification += distanceBetween(lastLocation!!, it)
+
+                            when(getNotificationTypeFromSharedPreference()){
+                                0 -> {
+                                    if (totalDistanceNotification > PreferenceManager.getDefaultSharedPreferences(requireContext()).getInt("distance_notification", 1000)){
+                                        totalDistanceNotification = 0.0
+                                        requireContext().showNotification("Aviso de metros", "Has alcanzado tu marca de aviso")
+                                    }
+                                }
+                                1 -> {
+                                    val myTime = PreferenceManager.getDefaultSharedPreferences(requireContext()).getInt("time_notification", 2)
+
+                                    if (getCurrentTimeMinutes().toInt() != 0){
+                                        if (getCurrentTimeMinutes() > (lastNotificationTime + (myTime - 1))) {
+                                            val title = "Título de la notificación"
+                                            val body = "El cronómetro ha alcanzado ${getCurrentTimeMinutes()} minutos"
+                                            requireContext().showNotification(title, body)
+
+                                            lastNotificationTime = getCurrentTimeMinutes().toInt()
+                                        }
+                                    }
+                                }
+                            }
+
+                            binding.textViewDistance.text = "${String.format("%.2f", totalDistance/1000)} km"
+                        }
+
+                    }else{
+                        routePoints.clear()
+                        routePausedPoints.add(it)
+                        updatePausedRoute()
                     }
 
-                } else {
-                    routePoints.clear()
-                    routePausedPoints.add(it)
-                    updatePausedRoute()
-                }
-
-                lastLocation = it
-                if (PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("autopause", false)){
-                    if (!isPaused){
-                        checkAutopause(it)
+                    println("Last Location Update")
+                    lastLocation = it
+                    if (PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("autopause", false)){
+                        if (!isPaused){
+                            checkAutopause(it)
+                        }
                     }
                 }
             }
         }
     }
-}
 
 ```
 
