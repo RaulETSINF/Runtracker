@@ -234,6 +234,54 @@ if (lastLocations.size == LAST_LOCATIONS_TO_CHECK) {
 
 3. Si el usuario no ha cambiado su ubicación durante un período de tiempo específico, se detiene el entrenamiento y se muestra un mensaje indicando que el autopause está activado.
 
+
+
+### Notificaciones
+
+1. Para notificaciones basadas en distancia:
+Verificamos si la distancia recorrida supera la distancia configurada para la notificación.
+Si se supera la distancia configurada, mostramos una notificación.
+
+2. Para notificaciones basadas en tiempo:
+Obtenemos el intervalo de tiempo para las notificaciones desde las preferencias compartidas.
+Verificamos si ha pasado el intervalo de tiempo desde la última notificación.
+Si ha pasado el intervalo de tiempo, mostramos una notificación y actualizamos el último tiempo de notificación.
+
+
+Junto con las actualziaciones de cada ubicación:
+
+```kotlin
+when(getNotificationTypeFromSharedPreference()){
+    0 -> {
+        // Verificar si se ha alcanzado la distancia para la notificación
+        if (totalDistanceNotification > PreferenceManager.getDefaultSharedPreferences(requireContext()).getInt("distance_notification", 1000)){
+            // Reiniciar el contador de distancia
+            totalDistanceNotification = 0.0
+            // Mostrar la notificación
+            requireContext().showNotification("Aviso de metros", "Has alcanzado tu marca de aviso")
+        }
+    }
+    1 -> {
+        // Obtener el intervalo de tiempo de las preferencias compartidas
+        val myTime = PreferenceManager.getDefaultSharedPreferences(requireContext()).getInt("time_notification", 2)
+        
+        // Verificar si ha pasado el intervalo de tiempo para la notificación
+        if (getCurrentTimeMinutes().toInt() != 0){
+            if (getCurrentTimeMinutes() > (lastNotificationTime + (myTime - 1))) {
+                // Mostrar la notificación
+                val title = "Título de la notificación"
+                val body = "El cronómetro ha alcanzado ${getCurrentTimeMinutes()} minutos"
+                requireContext().showNotification(title, body)
+                
+                // Actualizar el último tiempo de notificación
+                lastNotificationTime = getCurrentTimeMinutes().toInt()
+            }
+        }
+    }
+}
+```
+
+
 ## Historial
 
 En la pestaña "Historial" de la aplicación RunTracker, se muestra una lista de todos los entrenamientos realizados por el usuario. Para almacenar y gestionar estos datos, hemos implementado una base de datos utilizando Room, que es una capa de abstracción sobre SQLite.

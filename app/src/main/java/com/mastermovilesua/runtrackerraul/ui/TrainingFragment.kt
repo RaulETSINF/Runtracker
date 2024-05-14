@@ -120,8 +120,6 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
                                     }
                                 }
                                 1 -> {
-                                    val sharedTime = PreferenceManager.getDefaultSharedPreferences(requireContext())
-
                                     val myTime = PreferenceManager.getDefaultSharedPreferences(requireContext()).getInt("time_notification", 2)
 
                                     if (getCurrentTimeMinutes().toInt() != 0){
