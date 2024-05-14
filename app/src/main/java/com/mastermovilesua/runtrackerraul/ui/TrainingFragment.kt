@@ -50,6 +50,7 @@ import com.mastermovilesua.runtrackerraul.utils.distanceBetween
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.text.DecimalFormat
 
 class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
 
@@ -72,12 +73,13 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
 
     private var totalDistance = 0.0
     private var totalDistanceNotification = 0.0
+    private var totalDistance1000 = 0.0
 
     private var pauseOffset: Long = 0
     var lastNotificationTime = 0
 
     private var cadence = 0
-    private var rhythm = 0
+    private var rhythm = 0.0
     private var totalTrainingTime = 0
 
     private lateinit var sensorManager: SensorManager
@@ -114,6 +116,12 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
                         if (lastLocation != null) {
                             totalDistance += distanceBetween(lastLocation!!, it)
                             totalDistanceNotification += distanceBetween(lastLocation!!, it)
+                            totalDistance1000 += distanceBetween(lastLocation!!, it)
+
+                            if (totalDistanceNotification > 1000){
+                                rhythm = getCurrentTimeMinutesDouble()
+                                binding.textViewRhythm.text = getCurrentTimeMinutesDouble().toString()
+                            }
 
                             when(getNotificationTypeFromSharedPreference()){
                                 0 -> {
@@ -327,7 +335,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
             val entrenamiento = Entrenamiento(
                 tiempo = getCurrentTime(),
                 distancia = totalDistance,
-                ritmo = rhythm.toDouble(),
+                ritmo = rhythm,
                 cadencia = cadence,
                 fecha = System.currentTimeMillis()
             )
@@ -339,6 +347,13 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
     private fun getCurrentTimeMinutes(): Long {
         val elapsedTime = SystemClock.elapsedRealtime() - binding.chronometer.base
         return (elapsedTime / 60000)
+    }
+
+    private fun getCurrentTimeMinutesDouble(): Double {
+        val elapsedTime = SystemClock.elapsedRealtime() - binding.chronometer.base
+        val minutes = elapsedTime.toDouble() / 60000.0
+        val decimalFormat = DecimalFormat("#.##") // Formateador para dos decimales
+        return decimalFormat.format(minutes).toDouble()
     }
 
     private fun getCurrentTime(): String {
@@ -366,7 +381,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
         cadence = 0
         pauseOffset = 0
         lastNotificationTime = 0
-        rhythm = 0
+        rhythm = 0.0
         totalTrainingTime = 0
         stopLocationUpdates()
         sensorManager.unregisterListener(this)
