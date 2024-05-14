@@ -5,7 +5,7 @@
 # Raúl Piqueras Melero
 
 # Descripción
-RunTracker es una aplicación para Android que permite a los usuarios realizar un seguimiento de sus entrenamientos de carrera. La aplicación consta de varias funcionalidades principales:
+RunTracker es una aplicación para Android que permite a los usuarios realizar un seguimiento de sus entrenamientos de carrera.
 
 # Dificultades encontradas y cómo se resolvieron
 
@@ -354,7 +354,7 @@ Las opciones de configuración de RunTracker se pueden acceder a través de la p
 
 Para modificar estas opciones, acceda a la pestaña "Opciones" en la aplicación RunTracker.
 
-## Frameworks Utilizados
+## Herramientas Utilizadas
 
 - Room Database
 - Android Sensor Manager

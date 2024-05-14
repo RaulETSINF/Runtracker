@@ -1,13 +1,18 @@
 package com.mastermovilesua.runtrackerraul.ui
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.os.SystemClock
@@ -20,6 +25,9 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.preference.PreferenceManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Granularity
@@ -61,6 +69,8 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
     private var routePolyline: Polyline? = null
 
     private var totalDistance = 0.0
+    private var totalDistanceNotification = 0.0
+
     private var cadence = 0
     private var rhythm = 0
     private var totalTrainingTime = 0
@@ -98,6 +108,17 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
 
                         if (lastLocation != null) {
                             totalDistance += distanceBetween(lastLocation!!, it)
+                            totalDistanceNotification += distanceBetween(lastLocation!!, it)
+
+                            when(getNotificationTypeFromSharedPreference()){
+                                0 -> {
+                                    if (totalDistanceNotification > PreferenceManager.getDefaultSharedPreferences(requireContext()).getInt("distance_notification", 1000)){
+                                        totalDistanceNotification = 0.0
+                                        requireContext().showNotification("Aviso de metros", "Has alcanzado tu marca de aviso")
+                                    }
+                                }
+                            }
+
                             binding.textViewDistance.text = "${String.format("%.2f", totalDistance/1000)} km"
                         }
 
@@ -130,6 +151,49 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
                 lastLocations.clear()
                 showToast("Autopause activado: Actividad detenida")
             }
+        }
+    }
+
+    fun Context.showNotification(title: String, body: String) {
+
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // Si no tenemos permisos, solicitarlos
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                0
+            )
+            return
+        }
+
+        val notificationId = 1
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "ChannelName"
+            val descriptionText = "ChannelDescription"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel("channelId", name, importance).apply {
+                description = descriptionText
+            }
+
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+
+
+        val builder = NotificationCompat.Builder(this, "channelId")
+            .setSmallIcon(R.drawable.ic_launcher_background)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+
+        with(NotificationManagerCompat.from(this)) {
+            notify(notificationId, builder.build())
         }
     }
 
@@ -260,6 +324,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
         binding.chronometer.stop()
         routePolyline = null
         totalDistance = 0.0
+        totalDistanceNotification = 0.0
         cadence = 0
         rhythm = 0
         totalTrainingTime = 0
@@ -303,6 +368,14 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
             "low" -> return Priority.PRIORITY_LOW_POWER
         }
         return  Priority.PRIORITY_HIGH_ACCURACY
+    }
+
+    private fun getNotificationTypeFromSharedPreference(): Int {
+        when(PreferenceManager.getDefaultSharedPreferences(requireContext()).getString("notification_type", "time")){
+            "time" -> return  0
+            "distance" -> return 1
+        }
+        return  0
     }
 
     private fun stopLocationUpdates() {
