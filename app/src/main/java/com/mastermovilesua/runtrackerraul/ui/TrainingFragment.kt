@@ -120,7 +120,8 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
 
                             if (totalDistanceNotification > 1000){
                                 rhythm = getCurrentTimeMinutesDouble()
-                                binding.textViewRhythm.text = getCurrentTimeMinutesDouble().toString()
+                                binding.textViewRhythm.text = "${getCurrentTimeMinutesDouble()} min/km"
+                                totalDistance1000 = 0.0
                             }
 
                             when(getNotificationTypeFromSharedPreference()){
