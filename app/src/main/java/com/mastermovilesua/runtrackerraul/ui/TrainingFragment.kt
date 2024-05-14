@@ -21,7 +21,6 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -71,6 +70,8 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
     private var totalDistance = 0.0
     private var totalDistanceNotification = 0.0
 
+    private var pauseOffset: Long = 0
+
     private var cadence = 0
     private var rhythm = 0
     private var totalTrainingTime = 0
@@ -116,6 +117,18 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
                                         totalDistanceNotification = 0.0
                                         requireContext().showNotification("Aviso de metros", "Has alcanzado tu marca de aviso")
                                     }
+                                }
+                                1 -> {
+                                    val sharedTime = PreferenceManager.getDefaultSharedPreferences(requireContext()).getInt("time_notification", 2)
+
+                                    if (getCurrentTimeMinutes().toInt() != 0){
+                                        if ((getCurrentTimeMinutes() % sharedTime).toInt() == 0 && getCurrentTimeMinutes() > 0) {
+                                            val title = "Título de la notificación"
+                                            val body = "El cronómetro ha alcanzado ${getCurrentTimeMinutes()} minutos"
+                                            requireContext().showNotification(title, body)
+                                        }
+                                    }
+
                                 }
                             }
 
@@ -284,17 +297,23 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
     }
 
     private fun stopTraining() {
-        isPaused = true
-        binding.chronometer.stop()
-        binding.btnStartStop.text = "Reanudar Entrenamiento"
+        if (isRunning) {
+            isPaused = true
+            binding.chronometer.stop()
+            pauseOffset = SystemClock.elapsedRealtime() - binding.chronometer.base
+            binding.btnStartStop.text = "Reanudar Entrenamiento"
+        }
     }
 
     private fun resumeTraining(){
-        isPaused = false
-        isRunning = true
-        binding.chronometer.start()
-        binding.btnStartStop.text = "Pausar Entrenamiento"
-        startLocationUpdates()
+        if (isPaused) {
+            isPaused = false
+            isRunning = true
+            binding.chronometer.base = SystemClock.elapsedRealtime() - pauseOffset
+            binding.chronometer.start()
+            binding.btnStartStop.text = "Pausar Entrenamiento"
+            startLocationUpdates()
+        }
     }
 
     private fun resetTraining(){
@@ -309,6 +328,11 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
             RunTrackerApp.database.entrenamientoDao().insert(entrenamiento)
         }
         resetUserInterface()
+    }
+
+    private fun getCurrentTimeMinutes(): Long {
+        val elapsedTime = SystemClock.elapsedRealtime() - binding.chronometer.base
+        return (elapsedTime / 60000)
     }
 
     private fun resetUserInterface() {
@@ -326,6 +350,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
         totalDistance = 0.0
         totalDistanceNotification = 0.0
         cadence = 0
+        pauseOffset = 0
         rhythm = 0
         totalTrainingTime = 0
         stopLocationUpdates()
