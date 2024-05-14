@@ -444,6 +444,13 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
                             cadence = ((steps * 60000) / elapsedTime).toInt()
                             binding.textViewCadence.text = "$cadence spm"
                             lastStepTime = currentTime
+
+                            if (PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("cadence_notification", false)){
+                                if (cadence >= PreferenceManager.getDefaultSharedPreferences(requireContext()).getInt("cadence_threshold", 500) ) {
+                                    requireContext().showNotification("Aviso de Cadencia", "Has alcanzado tu marca de aviso")
+                                }
+                            }
+
                             totalSteps += steps
                         }
                         Log.d("Pasos", totalSteps.toString())

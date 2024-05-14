@@ -210,10 +210,14 @@ private fun resetUserInterface() {
     binding.chronometer.stop()
     routePolyline = null
     totalDistance = 0.0
+    totalDistanceNotification = 0.0
     cadence = 0
+    pauseOffset = 0
+    lastNotificationTime = 0
     rhythm = 0
     totalTrainingTime = 0
     stopLocationUpdates()
+    sensorManager.unregisterListener(this)
 }
 ```
 
@@ -304,6 +308,52 @@ when(getNotificationTypeFromSharedPreference()){
 }
 ```
 
+3. Para notificaciones basadas en Cadencia:
+
+Dentro de las actualizaciones de los pasos comprobamos
+
+```kotlin
+if (PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("cadence_notification", false)){
+         if (cadence >= PreferenceManager.getDefaultSharedPreferences(requireContext()).getInt("cadence_threshold", 500) ) {
+                requireContext().showNotification("Aviso de Cadencia", "Has alcanzado tu marca de aviso")
+        }
+}
+```
+
+## Sensor de Pasos y Cadencia
+
+1. Sensor de pasos:
+
+Este código escucha los eventos generados por el sensor de pasos del dispositivo. El sensor de pasos proporciona datos sobre el número de pasos detectados por el dispositivo.
+
+2. Cadencia (Pasos por minuto - spm):
+
+La cadencia es la cantidad de pasos que una persona da en un minuto. Para calcular la cadencia, dividimos el número de pasos detectados desde el último evento por el tiempo transcurrido desde ese evento, y luego multiplicamos por 60000 para convertirlo a pasos por minuto (ya que el tiempo se mide en milisegundos).
+
+```kotlin
+override fun onSensorChanged(event: SensorEvent?) {
+    event?.let {
+        if (it.sensor == stepSensor) { // Verifica si el evento proviene del sensor de pasos
+            if (isRunning) { // Verifica si el entrenamiento está en curso
+                if (!isPaused) { // Verifica si el entrenamiento no está pausado
+                    val currentTime = System.currentTimeMillis() // Obtiene el tiempo actual en milisegundos
+                    val steps = it.values[0].toInt() - totalSteps // Calcula el número de pasos desde el último evento
+                    val elapsedTime = currentTime - lastStepTime // Calcula el tiempo transcurrido desde el último evento
+
+                    if (elapsedTime > 0) {
+                        // Calcula la cadencia (pasos por minuto)
+                        val cadence = ((steps * 60000) / elapsedTime).toInt()
+                        binding.textViewCadence.text = "$cadence spm" // Actualiza la vista con la cadencia
+                        lastStepTime = currentTime // Actualiza el tiempo del último evento de paso
+                        totalSteps += steps // Actualiza el total de pasos
+                    }
+                    Log.d("Pasos", totalSteps.toString()) // Registra el número total de pasos en el registro
+                }
+            }
+        }
+    }
+}
+```
 
 ## Historial
 
