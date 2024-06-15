@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "239386822758",
+    "project_id": "runtracker-e273c",
+    "storage_bucket": "runtracker-e273c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:239386822758:android:ffc9889d5364460a91c5a7",
+        "android_client_info": {
+          "package_name": "com.mastermovilesua.runtrackerraul"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "239386822758-dblk9r0mlmc0rp7jvrhvdioahdrsthhl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mastermovilesua.runtrackerraul",
+            "certificate_hash": "0778b69ffd0808a59bffd8e34413d5d1c16b4302"
+          }
+        },
+        {
+          "client_id": "239386822758-n3a3gpsf96pbv79n2j1urlqtjhrb4jl5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTvTYjQMNYKwqZU_iNOiJtF19P9RSuctU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "239386822758-n3a3gpsf96pbv79n2j1urlqtjhrb4jl5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
