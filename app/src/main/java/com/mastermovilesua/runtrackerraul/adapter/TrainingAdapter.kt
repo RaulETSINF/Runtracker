@@ -7,11 +7,12 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.mastermovilesua.runtrackerraul.R
 import com.mastermovilesua.runtrackerraul.models.Entrenamiento
+import com.mastermovilesua.runtrackerraul.models.EntrenamientoFirebase
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class TrainingAdapter(var trainingList: List<Entrenamiento>) :
+class TrainingAdapter(var trainingList: List<EntrenamientoFirebase>) :
     RecyclerView.Adapter<TrainingAdapter.TrainingViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrainingViewHolder {

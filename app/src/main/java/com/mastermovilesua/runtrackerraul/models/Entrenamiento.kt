@@ -6,9 +6,22 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "entrenamientos")
 data class Entrenamiento(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-        val tiempo: String, // en milisegundos
-    val distancia: Double, // en metros
-    val ritmo: Double, // minutos por kilómetro
-    val cadencia: Int, // pasos por minuto
-    val fecha: Long // timestamp del inicio del entrenamiento
+        val tiempo: String,
+    val distancia: Double,
+    val ritmo: Double,
+    val cadencia: Int,
+    val fecha: Long
 )
+
+
+
+data class EntrenamientoFirebase    (
+    val id: String = "",
+    val tiempo: String = "",
+    val distancia: Double = 0.0,
+    val ritmo: Double = 0.0,
+    val cadencia: Int = 0,
+    val fecha: Long = 0L,
+    val userId: String = ""
+)
+

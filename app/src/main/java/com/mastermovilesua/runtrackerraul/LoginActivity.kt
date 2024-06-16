@@ -1,9 +1,11 @@
 package com.mastermovilesua.runtrackerraul
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -14,6 +16,7 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.mastermovilesua.runtrackerraul.databinding.ActivityLoginBinding
 import kotlinx.coroutines.launch
@@ -33,29 +36,38 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Initialize Firebase Auth
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+
         auth = FirebaseAuth.getInstance()
 
-        val user = auth.currentUser
+        if (auth.currentUser != null) {
+            navigateToMainActivity()
+            finish()
+        } else {
+            credentialManager = CredentialManager.create(this)
 
-        println(user?.email)
-        println(user?.displayName)
-        println(user?.photoUrl)
-        println(user?.phoneNumber)
+            binding.signInButton.setOnClickListener {
+                signInWithGoogle(this)
+            }
 
-        // Initialize Credential Manager
-        credentialManager = CredentialManager.create(this)
-
-        binding.signInButton.setOnClickListener {
-            signInWithGoogle(this)
+            binding.emailSignInButton.setOnClickListener {
+                signInWithEmail()
+            }
         }
+    }
+
+    private fun navigateToMainActivity() {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
     }
 
     private fun signInWithGoogle(context: Context) {
         val nonce = generateNonce()
         val googleIdOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
-            .setServerClientId("239386822758-n3a3gpsf96pbv79n2j1urlqtjhrb4jl5.apps.googleusercontent.com")
+            .setServerClientId(getString(R.string.default_web_client_id))
             .setAutoSelectEnabled(true)
             .setNonce(nonce)
             .build()
@@ -78,16 +90,14 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun handleSignIn(result: GetCredentialResponse) {
-        val credential = result.credential
 
-        when (credential) {
+        when (val credential = result.credential) {
             is CustomCredential -> {
                 if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                     try {
                         val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
                         val idToken = googleIdTokenCredential.idToken
                         Log.d("LoginActivity", "Google ID Token: $idToken")
-                        // Verificar si el idToken es nulo o vacío
                         if (idToken.isNullOrEmpty()) {
                             Log.e("LoginActivity", "Google ID Token is null or empty")
                         } else {
@@ -112,17 +122,34 @@ class LoginActivity : AppCompatActivity() {
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     Log.d("LoginActivity", "signInWithCredential:success")
-                    val user = auth.currentUser
-                    // Navegar a la siguiente pantalla
-
-                    println(user?.email)
-                    println(user?.displayName)
-                    println(user?.photoUrl)
-                    println(user?.phoneNumber)
+                    val intent = Intent(this, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                    startActivity(intent)
+                    finish()
                 } else {
                     Log.w("LoginActivity", "signInWithCredential:failure", task.exception)
                 }
             }
+    }
+
+    private fun signInWithEmail() {
+        val email = binding.emailEditText.text.toString()
+        val password = binding.passwordEditText.text.toString()
+        if (email.isNotEmpty() && password.isNotEmpty()) {
+            auth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this) { task ->
+                    if (task.isSuccessful) {
+                        Log.d("LoginActivity", "signInWithEmail:success")
+                        navigateToMainActivity()
+                        finish()
+                    } else {
+                        Log.w("LoginActivity", "signInWithEmail:failure", task.exception)
+                    }
+                }
+        } else {
+            Log.w("LoginActivity", "Email or password is empty")
+        }
     }
 
     private fun generateNonce(): String {

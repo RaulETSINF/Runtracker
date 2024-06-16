@@ -42,10 +42,13 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.mastermovilesua.runtrackerraul.R
 import com.mastermovilesua.runtrackerraul.RunTrackerApp
 import com.mastermovilesua.runtrackerraul.databinding.FragmentTrainingBinding
 import com.mastermovilesua.runtrackerraul.models.Entrenamiento
+import com.mastermovilesua.runtrackerraul.models.EntrenamientoFirebase
 import com.mastermovilesua.runtrackerraul.utils.distanceBetween
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -331,7 +334,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
     }
 
     private fun resetTraining(){
-        CoroutineScope(Dispatchers.IO).launch {
+       /* CoroutineScope(Dispatchers.IO).launch {
             val entrenamiento = Entrenamiento(
                 tiempo = getCurrentTime(),
                 distancia = totalDistance,
@@ -340,8 +343,41 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
                 fecha = System.currentTimeMillis()
             )
             RunTrackerApp.database.entrenamientoDao().insert(entrenamiento)
+        }*/
+
+        CoroutineScope(Dispatchers.IO).launch {
+
+            val entrenamiento = EntrenamientoFirebase(
+                tiempo = getCurrentTime(),
+                distancia = totalDistance,
+                ritmo = rhythm,
+                cadencia = cadence,
+                fecha = System.currentTimeMillis()
+            )
+            saveEntrenamientoToFirestore(entrenamiento)
         }
         resetUserInterface()
+    }
+
+
+    private fun saveEntrenamientoToFirestore(entrenamiento: EntrenamientoFirebase) {
+        val db = FirebaseFirestore.getInstance()
+        val currentUser = FirebaseAuth.getInstance().currentUser
+
+        if (currentUser != null) {
+            val entrenamientoData = entrenamiento.copy(userId = currentUser.uid)
+            db.collection("entrenamientos")
+                .add(entrenamientoData)
+                .addOnSuccessListener { documentReference ->
+
+                }
+                .addOnFailureListener { e ->
+
+
+                }
+        } else {
+            Log.w("LoginActivity", "User not logged in")
+        }
     }
 
     private fun getCurrentTimeMinutes(): Long {
