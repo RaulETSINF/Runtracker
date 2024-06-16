@@ -14,14 +14,37 @@
         android:id="@+id/recordFragment"
         android:name="com.mastermovilesua.runtrackerraul.ui.RecordFragment"
         android:label="fragment_record"
-        tools:layout="@layout/fragment_record" />
+        tools:layout="@layout/fragment_record" >
+        <action
+            android:id="@+id/action_recordFragment_to_routeDetailFragment"
+            app:destination="@id/routeDetailFragment">
+            <argument
+                android:name="entrenamiento"
+                app:argType="com.mastermovilesua.runtrackerraul.models.EntrenamientoFirebase" />
+        </action>
+    </fragment>
+
+
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.mastermovilesua.runtrackerraul.ui.ProfileFragment"
         android:label="fragment_profile"
         tools:layout="@layout/fragment_profile" />
+
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.mastermovilesua.runtrackerraul.ui.SettingsFragment"
         android:label="SettingsFragment" />
+
+
+    <fragment
+        android:id="@+id/routeDetailFragment"
+        android:name="com.mastermovilesua.runtrackerraul.ui.RouteDetailFragment"
+        android:label="fragment_route_detail"
+        tools:layout="@layout/fragment_route_detail">
+        <argument
+            android:name="entrenamiento"
+            app:argType="com.mastermovilesua.runtrackerraul.models.EntrenamientoFirebase" />
+    </fragment>
+
 </navigation>

@@ -44,11 +44,13 @@ import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.GeoPoint
 import com.mastermovilesua.runtrackerraul.R
 import com.mastermovilesua.runtrackerraul.RunTrackerApp
 import com.mastermovilesua.runtrackerraul.databinding.FragmentTrainingBinding
 import com.mastermovilesua.runtrackerraul.models.Entrenamiento
 import com.mastermovilesua.runtrackerraul.models.EntrenamientoFirebase
+import com.mastermovilesua.runtrackerraul.models.RoutePoint
 import com.mastermovilesua.runtrackerraul.utils.distanceBetween
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -72,6 +74,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
 
     private val routePoints = mutableListOf<LatLng>()
     private val routePausedPoints = mutableListOf<LatLng>()
+    private val totalRoutePoints = mutableListOf<RoutePoint>()
     private var routePolyline: Polyline? = null
 
     private var totalDistance = 0.0
@@ -103,17 +106,26 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
         override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
             super.onLocationResult(locationResult)
             Log.d("My Location", "Location Updated")
-            currentLocation = LatLng(locationResult.lastLocation!!.latitude, locationResult.lastLocation!!.longitude)
+            currentLocation = LatLng(
+                locationResult.lastLocation!!.latitude,
+                locationResult.lastLocation!!.longitude
+            )
             currentLocation?.let {
 
                 googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(it, 17f))
 
-                if (isRunning){
+                if (isRunning) {
 
-                    if (!isPaused){
+                    if (!isPaused) {
 
                         routePausedPoints.clear()
                         routePoints.add(it)
+                        totalRoutePoints.add(
+                            RoutePoint(
+                                point = GeoPoint(it.latitude, it.longitude),
+                                color = resources.getColor(R.color.md_theme_primary)
+                            )
+                        )
                         updateRoute()
 
                         if (lastLocation != null) {
@@ -121,26 +133,37 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
                             totalDistanceNotification += distanceBetween(lastLocation!!, it)
                             totalDistance1000 += distanceBetween(lastLocation!!, it)
 
-                            if (totalDistanceNotification > 1000){
+                            if (totalDistanceNotification > 1000) {
                                 rhythm = getCurrentTimeMinutesDouble()
-                                binding.textViewRhythm.text = "${getCurrentTimeMinutesDouble()} min/km"
+                                binding.textViewRhythm.text =
+                                    "${getCurrentTimeMinutesDouble()} min/km"
                                 totalDistance1000 = 0.0
                             }
 
-                            when(getNotificationTypeFromSharedPreference()){
+                            when (getNotificationTypeFromSharedPreference()) {
                                 0 -> {
-                                    if (totalDistanceNotification > PreferenceManager.getDefaultSharedPreferences(requireContext()).getInt("distance_notification", 1000)){
+                                    if (totalDistanceNotification > PreferenceManager.getDefaultSharedPreferences(
+                                            requireContext()
+                                        ).getInt("distance_notification", 1000)
+                                    ) {
                                         totalDistanceNotification = 0.0
-                                        requireContext().showNotification("Aviso de metros", "Has alcanzado tu marca de aviso")
+                                        requireContext().showNotification(
+                                            "Aviso de metros",
+                                            "Has alcanzado tu marca de aviso"
+                                        )
                                     }
                                 }
-                                1 -> {
-                                    val myTime = PreferenceManager.getDefaultSharedPreferences(requireContext()).getInt("time_notification", 2)
 
-                                    if (getCurrentTimeMinutes().toInt() != 0){
+                                1 -> {
+                                    val myTime =
+                                        PreferenceManager.getDefaultSharedPreferences(requireContext())
+                                            .getInt("time_notification", 2)
+
+                                    if (getCurrentTimeMinutes().toInt() != 0) {
                                         if (getCurrentTimeMinutes() > (lastNotificationTime + (myTime - 1))) {
                                             val title = "Título de la notificación"
-                                            val body = "El cronómetro ha alcanzado ${getCurrentTimeMinutes()} minutos"
+                                            val body =
+                                                "El cronómetro ha alcanzado ${getCurrentTimeMinutes()} minutos"
                                             requireContext().showNotification(title, body)
 
                                             lastNotificationTime = getCurrentTimeMinutes().toInt()
@@ -149,19 +172,28 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
                                 }
                             }
 
-                            binding.textViewDistance.text = "${String.format("%.2f", totalDistance/1000)} km"
+                            binding.textViewDistance.text =
+                                "${String.format("%.2f", totalDistance / 1000)} km"
                         }
 
-                    }else{
+                    } else {
                         routePoints.clear()
                         routePausedPoints.add(it)
+                        totalRoutePoints.add(
+                            RoutePoint(
+                                point = GeoPoint(it.latitude, it.longitude),
+                                color = resources.getColor(R.color.md_theme_error)
+                            )
+                        )
                         updatePausedRoute()
                     }
 
                     println("Last Location Update")
                     lastLocation = it
-                    if (PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("autopause", false)){
-                        if (!isPaused){
+                    if (PreferenceManager.getDefaultSharedPreferences(requireContext())
+                            .getBoolean("autopause", false)
+                    ) {
+                        if (!isPaused) {
                             checkAutopause(it)
                         }
                     }
@@ -191,7 +223,6 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
                 Manifest.permission.POST_NOTIFICATIONS
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            // Si no tenemos permisos, solicitarlos
             ActivityCompat.requestPermissions(
                 requireActivity(),
                 arrayOf(Manifest.permission.POST_NOTIFICATIONS),
@@ -246,7 +277,8 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
 
         sharedPreferences = requireActivity().getPreferences(Context.MODE_PRIVATE)
 
-        mapFragment = (childFragmentManager.findFragmentById(R.id.fragment_map) as SupportMapFragment?)!!
+        mapFragment =
+            (childFragmentManager.findFragmentById(R.id.fragment_map) as SupportMapFragment?)!!
         mapFragment.getMapAsync(this)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
@@ -263,9 +295,9 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
         binding.btnStartStop.setOnClickListener {
             Log.d("Click", "Click Corto")
             if (isRunning) {
-                if (isPaused){
+                if (isPaused) {
                     resumeTraining()
-                }else{
+                } else {
                     stopTraining()
                 }
             } else {
@@ -275,7 +307,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
 
         binding.btnStartStop.setOnLongClickListener {
             Log.d("LongClick", "Click Largo")
-            if (isRunning){
+            if (isRunning) {
                 showConfirmationDialog()
             }
             true
@@ -296,7 +328,10 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
     }
 
     private fun updateRoute() {
-        googleMap.addPolyline(PolylineOptions().addAll(routePoints).color(Color.RED))
+        googleMap.addPolyline(
+            PolylineOptions().addAll(routePoints)
+                .color(resources.getColor(R.color.md_theme_primary))
+        )
     }
 
     private fun updatePausedRoute() {
@@ -322,7 +357,7 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
         }
     }
 
-    private fun resumeTraining(){
+    private fun resumeTraining() {
         if (isPaused) {
             isPaused = false
             isRunning = true
@@ -333,17 +368,17 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
         }
     }
 
-    private fun resetTraining(){
-       /* CoroutineScope(Dispatchers.IO).launch {
-            val entrenamiento = Entrenamiento(
-                tiempo = getCurrentTime(),
-                distancia = totalDistance,
-                ritmo = rhythm,
-                cadencia = cadence,
-                fecha = System.currentTimeMillis()
-            )
-            RunTrackerApp.database.entrenamientoDao().insert(entrenamiento)
-        }*/
+    private fun resetTraining() {
+        /* CoroutineScope(Dispatchers.IO).launch {
+             val entrenamiento = Entrenamiento(
+                 tiempo = getCurrentTime(),
+                 distancia = totalDistance,
+                 ritmo = rhythm,
+                 cadencia = cadence,
+                 fecha = System.currentTimeMillis()
+             )
+             RunTrackerApp.database.entrenamientoDao().insert(entrenamiento)
+         }*/
 
         CoroutineScope(Dispatchers.IO).launch {
 
@@ -352,7 +387,8 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
                 distancia = totalDistance,
                 ritmo = rhythm,
                 cadencia = cadence,
-                fecha = System.currentTimeMillis()
+                fecha = System.currentTimeMillis(),
+                route = totalRoutePoints
             )
             saveEntrenamientoToFirestore(entrenamiento)
         }
@@ -433,7 +469,8 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
                 R.raw.map_style_night
             )
         )
-        mapFragment.view?.findViewWithTag<ImageView>("GoogleMapMyLocationButton")?.visibility = View.GONE;
+        mapFragment.view?.findViewWithTag<ImageView>("GoogleMapMyLocationButton")?.visibility =
+            View.GONE;
         mapFragment.view?.setBackgroundColor(resources.getColor(R.color.md_theme_inverseOnSurface))
         startLocationUpdates()
     }
@@ -441,33 +478,41 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
 
-        val locationRequest = LocationRequest.Builder(getPriorityFromSharedPreference(), 100).apply {
-            setGranularity(Granularity.GRANULARITY_PERMISSION_LEVEL)
-            setWaitForAccurateLocation(true)
-        }.build()
+        val locationRequest =
+            LocationRequest.Builder(getPriorityFromSharedPreference(), 100).apply {
+                setGranularity(Granularity.GRANULARITY_PERMISSION_LEVEL)
+                setWaitForAccurateLocation(true)
+            }.build()
 
-        val locationSettingsRequest = LocationSettingsRequest.Builder().addLocationRequest(locationRequest).build()
+        val locationSettingsRequest =
+            LocationSettingsRequest.Builder().addLocationRequest(locationRequest).build()
         val settingsClient = LocationServices.getSettingsClient(requireActivity())
         settingsClient.checkLocationSettings(locationSettingsRequest)
 
-        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+        fusedLocationClient.requestLocationUpdates(
+            locationRequest,
+            locationCallback,
+            Looper.getMainLooper()
+        )
     }
 
     private fun getPriorityFromSharedPreference(): Int {
-        when(PreferenceManager.getDefaultSharedPreferences(requireContext()).getString("gps_accuracy", "high")){
-            "high" -> return  Priority.PRIORITY_HIGH_ACCURACY
+        when (PreferenceManager.getDefaultSharedPreferences(requireContext())
+            .getString("gps_accuracy", "high")) {
+            "high" -> return Priority.PRIORITY_HIGH_ACCURACY
             "medium" -> return Priority.PRIORITY_BALANCED_POWER_ACCURACY
             "low" -> return Priority.PRIORITY_LOW_POWER
         }
-        return  Priority.PRIORITY_HIGH_ACCURACY
+        return Priority.PRIORITY_HIGH_ACCURACY
     }
 
     private fun getNotificationTypeFromSharedPreference(): Int {
-        when(PreferenceManager.getDefaultSharedPreferences(requireContext()).getString("notification_type", "time")){
-            "time" -> return  0
+        when (PreferenceManager.getDefaultSharedPreferences(requireContext())
+            .getString("notification_type", "time")) {
+            "time" -> return 0
             "distance" -> return 1
         }
-        return  0
+        return 0
     }
 
     private fun stopLocationUpdates() {
@@ -486,8 +531,8 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
     override fun onSensorChanged(event: SensorEvent?) {
         event?.let {
             if (it.sensor == stepSensor) {
-                if (isRunning){
-                    if (!isPaused){
+                if (isRunning) {
+                    if (!isPaused) {
                         val currentTime = System.currentTimeMillis()
                         val steps = it.values[0].toInt() - totalSteps
                         val elapsedTime = currentTime - lastStepTime
@@ -496,9 +541,17 @@ class TrainingFragment : Fragment(), OnMapReadyCallback, SensorEventListener {
                             binding.textViewCadence.text = "$cadence spm"
                             lastStepTime = currentTime
 
-                            if (PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("cadence_notification", false)){
-                                if (cadence >= PreferenceManager.getDefaultSharedPreferences(requireContext()).getInt("cadence_threshold", 500) ) {
-                                    requireContext().showNotification("Aviso de Cadencia", "Has alcanzado tu marca de aviso")
+                            if (PreferenceManager.getDefaultSharedPreferences(requireContext())
+                                    .getBoolean("cadence_notification", false)
+                            ) {
+                                if (cadence >= PreferenceManager.getDefaultSharedPreferences(
+                                        requireContext()
+                                    ).getInt("cadence_threshold", 500)
+                                ) {
+                                    requireContext().showNotification(
+                                        "Aviso de Cadencia",
+                                        "Has alcanzado tu marca de aviso"
+                                    )
                                 }
                             }
 

@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.navigation.Navigation
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -37,7 +38,15 @@ class RecordFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        trainingAdapter = TrainingAdapter(emptyList())
+        trainingAdapter = TrainingAdapter(
+            emptyList(),
+            onTrainingClick = {
+                val bundle = Bundle().apply {
+                    putParcelable("entrenamiento", it)
+                }
+                Navigation.findNavController(requireView()).navigate(R.id.action_recordFragment_to_routeDetailFragment, bundle)
+            }
+        )
         binding.recyclerViewTraining.apply {
             adapter = trainingAdapter
             layoutManager = LinearLayoutManager(requireContext())
@@ -48,14 +57,14 @@ class RecordFragment : Fragment() {
         getEntrenamientosFromFirestore()
     }
 
-/*    private fun loadTrainings() {
-        CoroutineScope(Dispatchers.IO).launch {
-            val trainings = RunTrackerApp.database.entrenamientoDao().getAllEntrenamientos()
-            withContext(Dispatchers.Main) {
-                updateTrainingList(trainings)
+    /*    private fun loadTrainings() {
+            CoroutineScope(Dispatchers.IO).launch {
+                val trainings = RunTrackerApp.database.entrenamientoDao().getAllEntrenamientos()
+                withContext(Dispatchers.Main) {
+                    updateTrainingList(trainings)
+                }
             }
-        }
-    }*/
+        }*/
 
     private fun updateTrainingList(trainings: List<EntrenamientoFirebase>) {
         trainingAdapter.trainingList = trainings
@@ -73,7 +82,9 @@ class RecordFragment : Fragment() {
                 .get()
                 .addOnSuccessListener { documents ->
 
-                    val entrenamientos = documents.map { documentSnapshot -> documentSnapshot.toObject(EntrenamientoFirebase::class.java) }.toList()
+                    val entrenamientos = documents.map { documentSnapshot ->
+                        documentSnapshot.toObject(EntrenamientoFirebase::class.java)
+                    }.toList()
 
                     updateTrainingList(entrenamientos)
                 }

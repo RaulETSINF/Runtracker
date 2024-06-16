@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import com.mastermovilesua.runtrackerraul.R
 import com.mastermovilesua.runtrackerraul.models.Entrenamiento
@@ -12,7 +13,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class TrainingAdapter(var trainingList: List<EntrenamientoFirebase>) :
+class TrainingAdapter(var trainingList: List<EntrenamientoFirebase>, var onTrainingClick: (EntrenamientoFirebase) -> Unit) :
     RecyclerView.Adapter<TrainingAdapter.TrainingViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrainingViewHolder {
@@ -37,6 +38,9 @@ class TrainingAdapter(var trainingList: List<EntrenamientoFirebase>) :
         holder.textViewTrainingDistance.text = "$distanciaEnKilometros km"
         holder.textViewTrainingRhythm.text = "${currentTraining.ritmo} min/km"
         holder.textViewTrainingCadence.text = "${currentTraining.cadencia} spm"
+        holder.trainingCard.setOnClickListener {
+            onTrainingClick(currentTraining)
+        }
     }
 
     override fun getItemCount() = trainingList.size
@@ -47,5 +51,6 @@ class TrainingAdapter(var trainingList: List<EntrenamientoFirebase>) :
         val textViewTrainingDistance: TextView = itemView.findViewById(R.id.textViewTrainingDistance)
         val textViewTrainingRhythm: TextView = itemView.findViewById(R.id.textViewTrainingRhythm)
         val textViewTrainingCadence: TextView = itemView.findViewById(R.id.textViewTrainingCadence)
+        val trainingCard: CardView = itemView.findViewById(R.id.training_card)
     }
 }

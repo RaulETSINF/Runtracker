@@ -12,8 +12,10 @@
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        map:cameraZoom="17"/>
-    
+        map:cameraZoom="17"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="0dp" />
+
     <androidx.cardview.widget.CardView
         android:layout_marginTop="50dp"
         android:layout_marginHorizontal="30dp"

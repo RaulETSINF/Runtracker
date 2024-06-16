@@ -6,14 +6,11 @@ import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
-import androidx.navigation.Navigation
 import androidx.navigation.findNavController
-import androidx.navigation.ui.NavigationUI
-import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.mastermovilesua.runtrackerraul.databinding.ActivityMainBinding
 
@@ -35,14 +32,23 @@ class MainActivity : AppCompatActivity() {
                 binding = ActivityMainBinding.inflate(layoutInflater)
                 setContentView(binding.root)
 
-                AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_YES)
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
 
                 val navController = findNavController(R.id.fragmentContainerView)
+
                 binding.bottomNav.setupWithNavController(navController)
+
+                // Listener para los cambios de destino
+                navController.addOnDestinationChangedListener { _, destination, _ ->
+                    when (destination.id) {
+                        R.id.routeDetailFragment -> binding.bottomNav.visibility = View.GONE
+                        else -> binding.bottomNav.visibility = View.VISIBLE
+                    }
+                }
+
             } else {
                 showPermissionSettingsDialog()
             }
-            
         }
 
         requestPermissionLauncher.launch(
@@ -52,9 +58,7 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.POST_NOTIFICATIONS
             )
         )
-
     }
-
 
     private fun showPermissionSettingsDialog() {
         val builder = AlertDialog.Builder(this)
@@ -73,5 +77,4 @@ class MainActivity : AppCompatActivity() {
         val dialog = builder.create()
         dialog.show()
     }
-
 }

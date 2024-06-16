@@ -7,6 +7,7 @@
     android:padding="16dp">
 
     <androidx.cardview.widget.CardView
+        android:id="@+id/training_card"
         app:cardCornerRadius="13dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
