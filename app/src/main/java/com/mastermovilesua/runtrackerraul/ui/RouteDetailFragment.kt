@@ -41,16 +41,25 @@ class RouteDetailFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun drawRoute(route: List<RoutePoint>) {
-        val polylineOptions = PolylineOptions().width(5f)
         val boundsBuilder = LatLngBounds.Builder()
 
-        route.forEach { routePoint ->
-            val latLng = LatLng(routePoint.point.latitude, routePoint.point.longitude)
-            polylineOptions.add(latLng).color(routePoint.color)
-            boundsBuilder.include(latLng)
-        }
+        for (i in 0 until route.size - 1) {
+            val startPoint = LatLng(route[i].point.latitude, route[i].point.longitude)
+            val endPoint = LatLng(route[i + 1].point.latitude, route[i + 1].point.longitude)
+            val color = route[i].color
 
-        googleMap.addPolyline(polylineOptions)
+            val polylineOptions = PolylineOptions()
+                .add(startPoint)
+                .add(endPoint)
+                .width(5f)
+                .color(color)
+
+            googleMap.addPolyline(polylineOptions)
+
+            // Incluir ambos puntos en los límites
+            boundsBuilder.include(startPoint)
+            boundsBuilder.include(endPoint)
+        }
 
         if (route.isNotEmpty()) {
             val bounds = boundsBuilder.build()
