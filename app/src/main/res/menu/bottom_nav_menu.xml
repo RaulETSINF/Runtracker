@@ -9,6 +9,10 @@
         android:title="Records"
         android:icon="@drawable/records"/>
 
+    <item android:id="@id/scanFragment"
+        android:title="Scan"
+        android:icon="@drawable/scan"/>
+
     <item android:id="@id/profileFragment"
         android:title="Profile"
         android:icon="@drawable/profile"/>

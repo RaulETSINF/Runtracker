@@ -18,7 +18,7 @@ data class Entrenamiento(
 
 
 data class EntrenamientoFirebase(
-    val id: String = "",
+    var id: String = "",
     val tiempo: String = "",
     val distancia: Double = 0.0,
     val ritmo: Double = 0.0,

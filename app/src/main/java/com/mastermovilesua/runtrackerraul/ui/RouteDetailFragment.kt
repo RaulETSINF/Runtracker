@@ -1,10 +1,12 @@
 package com.mastermovilesua.runtrackerraul.ui
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.navigation.Navigation
 import com.mastermovilesua.runtrackerraul.R
 import com.mastermovilesua.runtrackerraul.databinding.FragmentRouteDetailBinding
 import com.mastermovilesua.runtrackerraul.models.EntrenamientoFirebase
@@ -16,6 +18,11 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.PolylineOptions
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class RouteDetailFragment : Fragment(), OnMapReadyCallback {
 
@@ -38,6 +45,44 @@ class RouteDetailFragment : Fragment(), OnMapReadyCallback {
         entrenamiento = arguments?.getParcelable("entrenamiento")
         binding.map.onCreate(savedInstanceState)
         binding.map.getMapAsync(this)
+
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
+        val date = entrenamiento?.fecha?.let { Date(it) }
+        val fechaNormal = dateFormat.format(date)
+
+        // Convertir la distancia de metros a kilómetros
+        val distanciaEnKilometros = String.format("%.2f", entrenamiento?.distancia?.div(1000.0) ?: 0)
+
+        binding.textViewTrainingDate.text = fechaNormal
+        binding.textViewTrainingTime.text = "${entrenamiento?.tiempo}"
+        binding.textViewTrainingDistance.text = "$distanciaEnKilometros km"
+        binding.textViewTrainingRhythm.text = "${entrenamiento?.ritmo} min/km"
+        binding.textViewTrainingCadence.text = "${entrenamiento?.cadencia} spm"
+
+        binding.deleteTraining.setOnClickListener {
+            deleteEntrenamientosFromFirestore()
+        }
+
+    }
+
+
+    private fun deleteEntrenamientosFromFirestore() {
+        val db = FirebaseFirestore.getInstance()
+        val currentUser = FirebaseAuth.getInstance().currentUser
+
+        if (currentUser != null) {
+            entrenamiento?.id?.let {
+                db.collection("entrenamientos").document(it).delete()
+                    .addOnSuccessListener { documents ->
+                        Navigation.findNavController(requireView()).navigateUp()
+                    }
+                    .addOnFailureListener { e ->
+                        Log.w("LoginActivity", "Error getting documents", e)
+                    }
+            }
+        } else {
+            Log.w("LoginActivity", "User not logged in")
+        }
     }
 
     private fun drawRoute(route: List<RoutePoint>) {

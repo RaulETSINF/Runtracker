@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.mastermovilesua.runtrackerraul.LoginActivity
 import com.mastermovilesua.runtrackerraul.MainActivity
 import com.mastermovilesua.runtrackerraul.R
@@ -18,11 +19,13 @@ class ProfileFragment : Fragment() {
     private lateinit var binding: FragmentProfileBinding;
 
     private lateinit var auth: FirebaseAuth
+    private var currentUser: FirebaseUser? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         auth = FirebaseAuth.getInstance()
+        currentUser = FirebaseAuth.getInstance().currentUser
     }
 
     override fun onCreateView(
@@ -36,6 +39,11 @@ class ProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+
+
+        binding.name.text = currentUser?.displayName
+        binding.email.text = currentUser?.email
 
 
         binding.closeSession.setOnClickListener {

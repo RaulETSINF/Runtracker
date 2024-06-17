@@ -46,5 +46,10 @@
             android:name="entrenamiento"
             app:argType="com.mastermovilesua.runtrackerraul.models.EntrenamientoFirebase" />
     </fragment>
+    <fragment
+        android:id="@+id/scanFragment"
+        android:name="com.mastermovilesua.runtrackerraul.ui.ScanFragment"
+        android:label="fragment_scan"
+        tools:layout="@layout/fragment_scan" />
 
 </navigation>

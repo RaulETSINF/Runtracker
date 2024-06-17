@@ -53,6 +53,11 @@ class LoginActivity : AppCompatActivity() {
             binding.emailSignInButton.setOnClickListener {
                 signInWithEmail()
             }
+
+            binding.registerUser.setOnClickListener {
+                val intent = Intent(this, RegisterActivity::class.java)
+                startActivity(intent)
+            }
         }
     }
 

@@ -44,13 +44,24 @@
                 android:text="Nombre de Usuario"/>
 
             <TextView
-                android:id="@+id/textViewTrainingTime"
+                android:id="@+id/email"
                 android:textColor="#B0FFF9F9"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:text="Raul Piqueras Melero"/>
+
+            <TextView
+                android:id="@+id/name"
+                android:textColor="#B0FFF9F9"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:text="Raul Piqueras Melero"/>
+
+
 
         </LinearLayout>
 

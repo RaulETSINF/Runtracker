@@ -83,7 +83,9 @@ class RecordFragment : Fragment() {
                 .addOnSuccessListener { documents ->
 
                     val entrenamientos = documents.map { documentSnapshot ->
-                        documentSnapshot.toObject(EntrenamientoFirebase::class.java)
+                        documentSnapshot.toObject(EntrenamientoFirebase::class.java).apply {
+                            id = documentSnapshot.id
+                        }
                     }.toList()
 
                     updateTrainingList(entrenamientos)
