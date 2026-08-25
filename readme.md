@@ -476,15 +476,3 @@ Para modificar estas opciones, acceda a la pestaña "Opciones" en la aplicación
 - Google Maps
 - Shared Preferences
 
-## Instalación
-
-1. Clona este repositorio: `git clone https://github.com/mastermoviles/pr-ctica-1-runtracker-raul-piqueras.git`
-2. Abre el proyecto en Android Studio.
-3. Ejecuta la aplicación en un dispositivo Android o un emulador.
-
-## Opinión Personal
-
-En mi opinión, una de las debilidades de este proyecto es que intenta abarcar demasiado contenido para el objetivo que pretende alcanzar. Muchas de las funcionalidades descritas en el enunciado, como la ventana de configuración con ajustes para notificaciones y la ventana de perfil, podrían haberse omitido para centrarse en lo esencial. Considero que el el hecho de incluir tantas funcionalidades puede resultar abrumador.
-
-Sin embargo, a pesar de las dificultades encontradas, considero que el proyecto fue muy entretenido de realizar y extremadamente satisfactorio una vez completado. Es un proyecto original y he aprendido mucho trabajando en él. Aunque haya sido un reto, me siento muy satisfecho con el resultado final.
-
